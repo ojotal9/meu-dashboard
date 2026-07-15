@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/sidebar"
 
 const paginasDashboard = [
-  { chave: "resumo", titulo: "Resumo" },
   { chave: "clientes", titulo: "Cadastro de Clientes" },
   { chave: "materia-prima", titulo: "Saídas" },
   { chave: "resumo-cliente", titulo: "Resumo por Cliente" },
