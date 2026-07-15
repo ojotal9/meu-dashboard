@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Users, Settings, LayoutDashboard, Home, ChevronRight } from "lucide-react"
+import logoVilaPack from "@/assets/logo-vilapack.png"
 import {
   Sidebar,
   SidebarHeader,
@@ -27,16 +28,9 @@ export function AppSidebar({ paginaAtiva, onSelecionarPagina }) {
   return (
     <Sidebar>
       <SidebarHeader className="px-3 py-4">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary font-heading text-sm font-semibold text-sidebar-primary-foreground">
-            V
-          </div>
-          <div className="flex flex-col leading-tight">
-            <span className="font-heading text-sm font-semibold text-sidebar-foreground">
-              Dashboard VilaPack
-            </span>
-            <span className="text-[11px] text-sidebar-foreground/55">Controle financeiro</span>
-          </div>
+        <div className="flex flex-col gap-1">
+          <img src={logoVilaPack} alt="VilaPack" className="h-9 w-auto object-contain" />
+          <span className="pl-0.5 text-[11px] text-sidebar-foreground/55">Controle financeiro</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
