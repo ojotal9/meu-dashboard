@@ -2,14 +2,14 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --font-heading: 'Fraunces', serif;
-    --font-sans: 'Geist Variable', sans-serif;
-    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --font-heading: 'Montserrat', sans-serif;
+    --font-sans: 'Montserrat', sans-serif;
+    --font-mono: 'Montserrat', sans-serif;
     --color-brand-gold: var(--brand-gold);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
