@@ -13,10 +13,57 @@ export function formatarDataBR(dataIso) {
   return `${dia}-${mes}-${ano}`
 }
 
-// Converte uma chave de mês/ano no formato "aaaa-mm" para "mm-aaaa"
+// Aplica a máscara dd/mm/aaaa enquanto a pessoa digita
+export function mascararDataDigitada(valor) {
+  const digitos = valor.replace(/\D/g, "").slice(0, 8)
+  const partes = []
+  if (digitos.length > 0) partes.push(digitos.slice(0, 2))
+  if (digitos.length > 2) partes.push(digitos.slice(2, 4))
+  if (digitos.length > 4) partes.push(digitos.slice(4, 8))
+  return partes.join("/")
+}
+
+// Converte "dd/mm/aaaa" para "aaaa-mm-dd". Retorna null se a data for inválida.
+export function dataBrParaIso(dataBr) {
+  const partes = (dataBr || "").split("/")
+  if (partes.length !== 3) return null
+
+  const [diaTexto, mesTexto, anoTexto] = partes
+  if (anoTexto.length !== 4) return null
+
+  const dia = parseInt(diaTexto, 10)
+  const mes = parseInt(mesTexto, 10)
+  const ano = parseInt(anoTexto, 10)
+  if (!dia || !mes || !ano) return null
+
+  const dataObjeto = new Date(ano, mes - 1, dia)
+  const dataValida =
+    dataObjeto.getFullYear() === ano &&
+    dataObjeto.getMonth() === mes - 1 &&
+    dataObjeto.getDate() === dia
+  if (!dataValida) return null
+
+  return `${ano}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`
+}
+
+// Converte "aaaa-mm-dd" para "dd/mm/aaaa" (usado para preencher o campo de data)
+export function dataIsoParaBr(dataIso) {
+  if (!dataIso) return ""
+  const [ano, mes, dia] = dataIso.split("-")
+  if (!ano || !mes || !dia) return ""
+  return `${dia}/${mes}/${ano}`
+}
+
+const NOMES_MESES = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+]
+
+// Converte uma chave de mês/ano no formato "aaaa-mm" para "Mês de aaaa" (ex: "Julho de 2026")
 export function formatarMesAnoBR(chave) {
   if (!chave) return ""
   const [ano, mes] = chave.split("-")
-  if (!ano || !mes) return chave
-  return `${mes}-${ano}`
+  const numeroMes = parseInt(mes, 10)
+  if (!ano || !numeroMes || numeroMes < 1 || numeroMes > 12) return chave
+  return `${NOMES_MESES[numeroMes - 1]} de ${ano}`
 }

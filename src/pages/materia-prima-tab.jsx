@@ -17,7 +17,7 @@ import {
   TableCell,
 } from "@/components/ui/table"
 import { useDashboardData } from "@/context/dashboard-data-context"
-import { formatarDataBR } from "@/lib/utils"
+import { formatarDataBR, mascararDataDigitada, dataBrParaIso, dataIsoParaBr } from "@/lib/utils"
 
 const TIPOS = ["Tinta", "Fitilho", "Matriz", "Clichê", "Outros"]
 
@@ -30,14 +30,24 @@ export function MateriaPrimaTab() {
 
   const [tipo, setTipo] = useState("Tinta")
   const [valor, setValor] = useState("")
-  const [data, setData] = useState(hoje())
+  const [dataTexto, setDataTexto] = useState(dataIsoParaBr(hoje()))
   const [observacao, setObservacao] = useState("")
+
+  function handleDataChange(e) {
+    setDataTexto(mascararDataDigitada(e.target.value))
+  }
 
   function handleAdicionar() {
     const valorTexto = valor.trim().replace(",", ".")
 
-    if (!valorTexto || !data) {
+    if (!valorTexto || !dataTexto) {
       alert("Preencha o valor e a data antes de adicionar")
+      return
+    }
+
+    const dataIso = dataBrParaIso(dataTexto)
+    if (!dataIso) {
+      alert("Digite a data no formato dd/mm/aaaa")
       return
     }
 
@@ -50,7 +60,7 @@ export function MateriaPrimaTab() {
     adicionarMateriaPrima({
       tipo,
       valor: valorNumerico,
-      data,
+      data: dataIso,
       observacao: observacao.trim(),
     })
 
@@ -77,7 +87,14 @@ export function MateriaPrimaTab() {
         </Select>
 
         <Input placeholder="Valor (ex: 150.00)" value={valor} onChange={(e) => setValor(e.target.value)} className="max-w-[140px]" />
-        <Input type="date" value={data} onChange={(e) => setData(e.target.value)} className="max-w-[160px]" />
+        <Input
+          placeholder="dd/mm/aaaa"
+          value={dataTexto}
+          onChange={handleDataChange}
+          inputMode="numeric"
+          maxLength={10}
+          className="max-w-[140px]"
+        />
         <Input placeholder="Observação" value={observacao} onChange={(e) => setObservacao(e.target.value)} className="max-w-[220px]" />
         <Button onClick={handleAdicionar}>Adicionar</Button>
       </div>
