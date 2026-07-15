@@ -20,7 +20,7 @@ export function DashboardHome() {
         <TabsList>
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
           <TabsTrigger value="clientes">Cadastro de Clientes</TabsTrigger>
-          <TabsTrigger value="materia-prima">Cadastro de Matéria-Prima</TabsTrigger>
+          <TabsTrigger value="materia-prima">Saídas</TabsTrigger>
           <TabsTrigger value="resumo-cliente">Resumo por Cliente</TabsTrigger>
           <TabsTrigger value="transacoes">Transações</TabsTrigger>
           <TabsTrigger value="historico">Histórico Mensal</TabsTrigger>

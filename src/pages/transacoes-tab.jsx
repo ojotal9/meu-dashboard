@@ -17,6 +17,7 @@ import {
   TableCell,
 } from "@/components/ui/table"
 import { useDashboardData } from "@/context/dashboard-data-context"
+import { formatarMesAnoBR } from "@/lib/utils"
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -30,13 +31,6 @@ function anosDisponiveis() {
 
 function formatarReais(valor) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
-}
-
-function formatarMes(chave) {
-  const [ano, mes] = chave.split("-")
-  const numeroMes = parseInt(mes, 10)
-  if (!ano || !numeroMes || numeroMes < 1 || numeroMes > 12) return chave
-  return `${MESES[numeroMes - 1]} de ${ano}`
 }
 
 export function TransacoesTab() {
@@ -143,7 +137,7 @@ export function TransacoesTab() {
               <TableCell className="font-medium">{t.cliente}</TableCell>
               <TableCell>{formatarReais(t.valor)}</TableCell>
               <TableCell>{t.tipo}</TableCell>
-              <TableCell>{formatarMes(t.data)}</TableCell>
+              <TableCell>{formatarMesAnoBR(t.data)}</TableCell>
               <TableCell>
                 <Button variant="destructive" size="sm" onClick={() => removerTransacao(t.id)}>
                   Remover

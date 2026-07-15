@@ -15,7 +15,7 @@ import {
 const paginasDashboard = [
   { chave: "resumo", titulo: "Resumo" },
   { chave: "clientes", titulo: "Cadastro de Clientes" },
-  { chave: "materia-prima", titulo: "Cadastro de Matéria-Prima" },
+  { chave: "materia-prima", titulo: "Saídas" },
   { chave: "resumo-cliente", titulo: "Resumo por Cliente" },
   { chave: "transacoes", titulo: "Transações" },
   { chave: "historico", titulo: "Histórico Mensal" },

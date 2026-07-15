@@ -18,25 +18,7 @@ import {
   CartesianGrid,
 } from "recharts"
 import { useDashboardData } from "@/context/dashboard-data-context"
-
-const MESES = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-]
-
-function formatarMes(chave) {
-  const [ano, mes] = chave.split("-")
-  const numeroMes = parseInt(mes, 10)
-  if (!ano || !numeroMes || numeroMes < 1 || numeroMes > 12) return chave
-  return `${MESES[numeroMes - 1]} de ${ano}`
-}
-
-function apenasNomeMes(chave) {
-  const [, mes] = chave.split("-")
-  const numeroMes = parseInt(mes, 10)
-  if (!numeroMes || numeroMes < 1 || numeroMes > 12) return chave
-  return MESES[numeroMes - 1]
-}
+import { formatarMesAnoBR } from "@/lib/utils"
 
 function formatarReais(valor) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
@@ -91,14 +73,14 @@ export function ResumoTab() {
         <Select value={mesSelecionado} onValueChange={setMesSelecionado}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Mês">
-              {mesSelecionado === "todos" ? "Todos os meses" : apenasNomeMes(mesSelecionado)}
+              {mesSelecionado === "todos" ? "Todos os meses" : formatarMesAnoBR(mesSelecionado)}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos os meses</SelectItem>
             {mesesDisponiveis.map((chave) => (
               <SelectItem key={chave} value={chave}>
-                {apenasNomeMes(chave)}
+                {formatarMesAnoBR(chave)}
               </SelectItem>
             ))}
           </SelectContent>

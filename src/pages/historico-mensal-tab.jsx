@@ -26,18 +26,7 @@ import {
   CartesianGrid,
 } from "recharts"
 import { useDashboardData } from "@/context/dashboard-data-context"
-
-const MESES = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
-]
-
-function formatarMes(chave) {
-  const [ano, mes] = chave.split("-")
-  const numeroMes = parseInt(mes, 10)
-  if (!ano || !numeroMes || numeroMes < 1 || numeroMes > 12) return chave
-  return `${MESES[numeroMes - 1]} de ${ano}`
-}
+import { formatarMesAnoBR } from "@/lib/utils"
 
 function formatarReais(valor) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
@@ -72,7 +61,7 @@ export function HistoricoMensalTab() {
       : mesesOrdenados.filter((m) => m.chave === mesSelecionado)
 
   const dadosGrafico = mesesFiltrados.map((m) => ({
-    mes: formatarMes(m.chave),
+    mes: formatarMesAnoBR(m.chave),
     Entradas: m.entrada,
     Saídas: m.saida,
   }))
@@ -88,7 +77,7 @@ export function HistoricoMensalTab() {
             <SelectItem value="todos">Todos os meses</SelectItem>
             {mesesOrdenados.map((m) => (
               <SelectItem key={m.chave} value={m.chave}>
-                {formatarMes(m.chave)}
+                {formatarMesAnoBR(m.chave)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -128,7 +117,7 @@ export function HistoricoMensalTab() {
             const resultado = m.entrada - m.saida
             return (
               <TableRow key={m.chave}>
-                <TableCell className="font-medium">{formatarMes(m.chave)}</TableCell>
+                <TableCell className="font-medium">{formatarMesAnoBR(m.chave)}</TableCell>
                 <TableCell>{formatarReais(m.entrada)}</TableCell>
                 <TableCell>{formatarReais(m.saida)}</TableCell>
                 <TableCell>

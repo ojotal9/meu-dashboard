@@ -16,7 +16,7 @@ function App() {
     inicio: { titulo: "Início", Componente: () => <InicioTab onNavegar={setPaginaAtiva} /> },
     resumo: { titulo: "Resumo", Componente: ResumoTab },
     clientes: { titulo: "Cadastro de Clientes", Componente: ClientesTab },
-    "materia-prima": { titulo: "Cadastro de Matéria-Prima", Componente: MateriaPrimaTab },
+    "materia-prima": { titulo: "Saídas", Componente: MateriaPrimaTab },
     "resumo-cliente": { titulo: "Resumo por Cliente", Componente: ResumoClienteTab },
     transacoes: { titulo: "Transações", Componente: TransacoesTab },
     historico: { titulo: "Histórico Mensal", Componente: HistoricoMensalTab },

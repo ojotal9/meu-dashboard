@@ -17,6 +17,7 @@ import {
   TableCell,
 } from "@/components/ui/table"
 import { useDashboardData } from "@/context/dashboard-data-context"
+import { formatarDataBR } from "@/lib/utils"
 
 const TIPOS = ["Tinta", "Fitilho", "Matriz", "Clichê", "Outros"]
 
@@ -96,7 +97,7 @@ export function MateriaPrimaTab() {
             <TableRow key={item.id}>
               <TableCell className="font-medium">{item.tipo}</TableCell>
               <TableCell>{formatarReais(item.valor)}</TableCell>
-              <TableCell>{item.data}</TableCell>
+              <TableCell>{formatarDataBR(item.data)}</TableCell>
               <TableCell>{item.observacao}</TableCell>
               <TableCell>
                 <Button variant="destructive" size="sm" onClick={() => removerMateriaPrima(item.id)}>
