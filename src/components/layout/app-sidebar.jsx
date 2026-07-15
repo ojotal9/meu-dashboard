@@ -29,11 +29,11 @@ export function AppSidebar({ paginaAtiva, onSelecionarPagina }) {
       <SidebarHeader className="px-3 py-4">
         <div className="flex items-center gap-2.5">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary font-heading text-sm font-semibold text-sidebar-primary-foreground">
-            M
+            V
           </div>
           <div className="flex flex-col leading-tight">
             <span className="font-heading text-sm font-semibold text-sidebar-foreground">
-              Meu Dashboard
+              Dashboard VilaPack
             </span>
             <span className="text-[11px] text-sidebar-foreground/55">Controle financeiro</span>
           </div>
