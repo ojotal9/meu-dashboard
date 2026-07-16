@@ -1,5 +1,7 @@
 import { useState } from "react"
+import { AlertTriangle } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectTrigger,
@@ -34,12 +36,18 @@ function formatarSaldo(valor) {
 
 const CORES = ["#0E6B58", "#9C3B33"]
 
-export function InicioTab() {
-  const { clientes, transacoes } = useDashboardData()
-  const { sessao, perfil } = useAuth()
+export function InicioTab({ onNavegar }) {
+  const { clientes, transacoes, contasPagar, contasReceber } = useDashboardData()
+  const { sessao, perfil, podeAcessar } = useAuth()
   const [mesSelecionado, setMesSelecionado] = useState("todos")
 
   const nomeExibido = perfil?.nome || sessao?.user?.email?.split("@")[0] || ""
+
+  const hojeIso = new Date().toISOString().slice(0, 10)
+  const pagarAtrasadas = contasPagar.filter((c) => c.status === "pendente" && c.vencimento < hojeIso)
+  const receberAtrasadas = contasReceber.filter((c) => c.status === "pendente" && c.vencimento < hojeIso)
+  const mostrarAlertaPagar = pagarAtrasadas.length > 0 && podeAcessar("contas-pagar")
+  const mostrarAlertaReceber = receberAtrasadas.length > 0 && podeAcessar("contas-receber")
 
   // Descobre quais meses existem nas transações, pra popular o seletor
   const mesesDisponiveis = Array.from(
@@ -75,6 +83,40 @@ export function InicioTab() {
       <p className="text-muted-foreground">
         {nomeExibido ? `Bem-vindo, ${nomeExibido}!` : "Bem-vindo!"} Aqui está um resumo rápido do seu negócio.
       </p>
+
+      {(mostrarAlertaPagar || mostrarAlertaReceber) && (
+        <Card className="border-l-4 border-l-destructive bg-destructive/5">
+          <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+              <div className="flex flex-col gap-0.5 text-sm">
+                {mostrarAlertaPagar && (
+                  <span>
+                    Você tem <strong>{pagarAtrasadas.length}</strong> conta(s) a pagar atrasada(s).
+                  </span>
+                )}
+                {mostrarAlertaReceber && (
+                  <span>
+                    Você tem <strong>{receberAtrasadas.length}</strong> conta(s) a receber atrasada(s).
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              {mostrarAlertaPagar && (
+                <Button size="sm" variant="outline" onClick={() => onNavegar?.("contas-pagar")}>
+                  Ver contas a pagar
+                </Button>
+              )}
+              {mostrarAlertaReceber && (
+                <Button size="sm" variant="outline" onClick={() => onNavegar?.("contas-receber")}>
+                  Ver contas a receber
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Card>

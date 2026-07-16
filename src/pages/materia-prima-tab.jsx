@@ -16,6 +16,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table"
+import { CampoBusca } from "@/components/campo-busca"
 import { useDashboardData } from "@/context/dashboard-data-context"
 import { formatarDataBR, mascararDataDigitada, dataBrParaIso, dataIsoParaBr } from "@/lib/utils"
 
@@ -32,6 +33,7 @@ export function MateriaPrimaTab() {
   const [valor, setValor] = useState("")
   const [dataTexto, setDataTexto] = useState(dataIsoParaBr(hoje()))
   const [observacao, setObservacao] = useState("")
+  const [busca, setBusca] = useState("")
 
   function handleDataChange(e) {
     setDataTexto(mascararDataDigitada(e.target.value))
@@ -72,6 +74,13 @@ export function MateriaPrimaTab() {
     return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
   }
 
+  const termo = busca.trim().toLowerCase()
+  const itensFiltrados = termo
+    ? materiaPrimas.filter((item) =>
+        [item.tipo, item.observacao].some((campo) => campo?.toLowerCase().includes(termo))
+      )
+    : materiaPrimas
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -99,6 +108,8 @@ export function MateriaPrimaTab() {
         <Button onClick={handleAdicionar}>Adicionar</Button>
       </div>
 
+      <CampoBusca value={busca} onChange={setBusca} placeholder="Buscar por tipo ou observação..." />
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -110,7 +121,7 @@ export function MateriaPrimaTab() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {materiaPrimas.map((item) => (
+          {itensFiltrados.map((item) => (
             <TableRow key={item.id}>
               <TableCell className="font-medium">{item.tipo}</TableCell>
               <TableCell>{formatarReais(item.valor)}</TableCell>
@@ -123,6 +134,13 @@ export function MateriaPrimaTab() {
               </TableCell>
             </TableRow>
           ))}
+          {itensFiltrados.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center text-muted-foreground">
+                Nenhum item encontrado
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </div>

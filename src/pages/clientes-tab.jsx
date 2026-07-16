@@ -9,6 +9,7 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table"
+import { CampoBusca } from "@/components/campo-busca"
 import { useDashboardData } from "@/context/dashboard-data-context"
 
 export function ClientesTab() {
@@ -19,6 +20,7 @@ export function ClientesTab() {
   const [email, setEmail] = useState("")
   const [cpf, setCpf] = useState("")
   const [representante, setRepresentante] = useState("")
+  const [busca, setBusca] = useState("")
 
   function handleAdicionar() {
     if (!nome.trim()) {
@@ -41,6 +43,14 @@ export function ClientesTab() {
     setRepresentante("")
   }
 
+  const termo = busca.trim().toLowerCase()
+  const clientesFiltrados = termo
+    ? clientes.filter((c) =>
+        [c.nome, c.telefone, c.email, c.cpf, c.representante]
+          .some((campo) => campo?.toLowerCase().includes(termo))
+      )
+    : clientes
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap gap-2">
@@ -51,6 +61,8 @@ export function ClientesTab() {
         <Input placeholder="Representante" value={representante} onChange={(e) => setRepresentante(e.target.value)} className="max-w-[180px]" />
         <Button onClick={handleAdicionar}>Adicionar cliente</Button>
       </div>
+
+      <CampoBusca value={busca} onChange={setBusca} placeholder="Buscar cliente por nome, telefone, e-mail ou CPF..." />
 
       <Table>
         <TableHeader>
@@ -64,7 +76,7 @@ export function ClientesTab() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {clientes.map((cliente) => (
+          {clientesFiltrados.map((cliente) => (
             <TableRow key={cliente.id}>
               <TableCell className="font-medium">{cliente.nome}</TableCell>
               <TableCell>{cliente.telefone}</TableCell>
@@ -78,6 +90,13 @@ export function ClientesTab() {
               </TableCell>
             </TableRow>
           ))}
+          {clientesFiltrados.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center text-muted-foreground">
+                Nenhum cliente encontrado
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </div>

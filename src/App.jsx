@@ -51,7 +51,7 @@ function ConteudoDashboard() {
         <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
           {titulo}
         </h1>
-        <Componente />
+        <Componente onNavegar={setPaginaAtiva} />
       </div>
     </DashboardLayout>
   )

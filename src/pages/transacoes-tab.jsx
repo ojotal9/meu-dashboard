@@ -16,12 +16,18 @@ import {
   TableHead,
   TableCell,
 } from "@/components/ui/table"
+import { CampoBusca } from "@/components/campo-busca"
 import { useDashboardData } from "@/context/dashboard-data-context"
 import { formatarMesAnoBR } from "@/lib/utils"
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+]
+
+const CATEGORIAS = [
+  "Venda", "Serviço", "Matéria-prima", "Frete", "Salário",
+  "Aluguel", "Imposto", "Manutenção", "Outros",
 ]
 
 function anosDisponiveis() {
@@ -42,8 +48,10 @@ export function TransacoesTab() {
   const [cliente, setCliente] = useState("")
   const [valor, setValor] = useState("")
   const [tipo, setTipo] = useState("entrada")
+  const [categoria, setCategoria] = useState("Outros")
   const [mes, setMes] = useState(mesAtual)
   const [ano, setAno] = useState(String(anoAtual))
+  const [busca, setBusca] = useState("")
 
   function handleAdicionar() {
     const valorTexto = valor.trim().replace(",", ".")
@@ -66,9 +74,16 @@ export function TransacoesTab() {
     const numeroMes = MESES.indexOf(mes) + 1
     const data = `${ano}-${String(numeroMes).padStart(2, "0")}`
 
-    adicionarTransacao({ cliente, valor: valorNumerico, tipo, data })
+    adicionarTransacao({ cliente, valor: valorNumerico, tipo, categoria, data })
     setValor("")
   }
+
+  const termo = busca.trim().toLowerCase()
+  const transacoesFiltradas = termo
+    ? transacoes.filter((t) =>
+        [t.cliente, t.categoria].some((campo) => campo?.toLowerCase().includes(termo))
+      )
+    : transacoes
 
   return (
     <div className="flex flex-col gap-4">
@@ -93,6 +108,17 @@ export function TransacoesTab() {
           <SelectContent>
             <SelectItem value="entrada">entrada</SelectItem>
             <SelectItem value="saida">saída</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={categoria} onValueChange={setCategoria}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Categoria" />
+          </SelectTrigger>
+          <SelectContent>
+            {CATEGORIAS.map((c) => (
+              <SelectItem key={c} value={c}>{c}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
 
@@ -121,22 +147,26 @@ export function TransacoesTab() {
         <Button onClick={handleAdicionar}>Adicionar</Button>
       </div>
 
+      <CampoBusca value={busca} onChange={setBusca} placeholder="Buscar por cliente ou categoria..." />
+
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Cliente</TableHead>
             <TableHead>Valor</TableHead>
             <TableHead>Tipo</TableHead>
+            <TableHead>Categoria</TableHead>
             <TableHead>Data</TableHead>
             <TableHead></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {transacoes.map((t) => (
+          {transacoesFiltradas.map((t) => (
             <TableRow key={t.id}>
               <TableCell className="font-medium">{t.cliente}</TableCell>
               <TableCell>{formatarReais(t.valor)}</TableCell>
               <TableCell>{t.tipo}</TableCell>
+              <TableCell>{t.categoria || "—"}</TableCell>
               <TableCell>{formatarMesAnoBR(t.data)}</TableCell>
               <TableCell>
                 <Button variant="destructive" size="sm" onClick={() => removerTransacao(t.id)}>
@@ -145,6 +175,13 @@ export function TransacoesTab() {
               </TableCell>
             </TableRow>
           ))}
+          {transacoesFiltradas.length === 0 && (
+            <TableRow>
+              <TableCell colSpan={6} className="text-center text-muted-foreground">
+                Nenhuma transação encontrada
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </div>

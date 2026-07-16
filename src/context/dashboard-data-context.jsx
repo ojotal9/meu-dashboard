@@ -81,6 +81,7 @@ export function DashboardDataProvider({ children }) {
       cliente: `Matéria-prima: ${data.tipo}`,
       valor: data.valor,
       tipo: "saida",
+      categoria: "Matéria-prima",
       data: data.data,
     })
   }
