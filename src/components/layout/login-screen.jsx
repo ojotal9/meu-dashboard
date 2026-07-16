@@ -30,7 +30,7 @@ export function LoginScreen() {
     <div className="flex min-h-svh items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="items-center text-center">
-          <img src={logoVilaPack} alt="VilaPack" className="mb-2 h-10 w-auto object-contain" />
+          <img src={logoVilaPack} alt="VilaPack" className="mb-3 h-14 w-auto object-contain" />
           <CardTitle>Entrar</CardTitle>
           <CardDescription>Acesse com seu e-mail e senha cadastrados</CardDescription>
         </CardHeader>

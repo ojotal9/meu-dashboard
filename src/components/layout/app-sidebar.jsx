@@ -47,10 +47,10 @@ export function AppSidebar({ paginaAtiva, onSelecionarPagina }) {
 
   return (
     <Sidebar>
-      <SidebarHeader className="px-3 py-4">
-        <div className="flex flex-col gap-1">
-          <img src={logoVilaPack} alt="VilaPack" className="h-9 w-auto object-contain" />
-          <span className="pl-0.5 text-[11px] text-sidebar-foreground/55">Controle financeiro</span>
+      <SidebarHeader className="p-3">
+        <div className="flex flex-col gap-2 rounded-lg border-b-2 border-sidebar-primary bg-sidebar-accent/60 px-3 py-3">
+          <img src={logoVilaPack} alt="VilaPack" className="h-11 w-auto object-contain" />
+          <span className="text-[11px] text-sidebar-foreground/55">Controle financeiro</span>
         </div>
       </SidebarHeader>
       <SidebarContent>
