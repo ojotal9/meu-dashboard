@@ -18,6 +18,7 @@ import {
   CartesianGrid,
 } from "recharts"
 import { useDashboardData } from "@/context/dashboard-data-context"
+import { useAuth } from "@/context/auth-context"
 import { formatarMesAnoBR } from "@/lib/utils"
 
 function formatarReais(valor) {
@@ -35,7 +36,10 @@ const CORES = ["#0E6B58", "#9C3B33"]
 
 export function InicioTab() {
   const { clientes, transacoes } = useDashboardData()
+  const { sessao, perfil } = useAuth()
   const [mesSelecionado, setMesSelecionado] = useState("todos")
+
+  const nomeExibido = perfil?.nome || sessao?.user?.email?.split("@")[0] || ""
 
   // Descobre quais meses existem nas transações, pra popular o seletor
   const mesesDisponiveis = Array.from(
@@ -69,7 +73,7 @@ export function InicioTab() {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-muted-foreground">
-        Bem-vindo! Aqui está um resumo rápido do seu negócio.
+        {nomeExibido ? `Bem-vindo, ${nomeExibido}!` : "Bem-vindo!"} Aqui está um resumo rápido do seu negócio.
       </p>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
