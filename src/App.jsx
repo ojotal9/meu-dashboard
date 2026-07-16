@@ -11,6 +11,8 @@ import { TransacoesTab } from "@/pages/transacoes-tab"
 import { HistoricoMensalTab } from "@/pages/historico-mensal-tab"
 import { ConfiguracoesTab } from "@/pages/configuracoes-tab"
 import { UsuariosTab } from "@/pages/usuarios-tab"
+import { ContasReceberTab } from "@/pages/contas-receber-tab"
+import { ContasPagarTab } from "@/pages/contas-pagar-tab"
 
 const TODAS_PAGINAS = {
   inicio: { titulo: "Início", Componente: InicioTab },
@@ -19,6 +21,8 @@ const TODAS_PAGINAS = {
   "resumo-cliente": { titulo: "Resumo por Cliente", Componente: ResumoClienteTab },
   transacoes: { titulo: "Transações", Componente: TransacoesTab },
   historico: { titulo: "Histórico Mensal", Componente: HistoricoMensalTab },
+  "contas-receber": { titulo: "Contas a Receber", Componente: ContasReceberTab },
+  "contas-pagar": { titulo: "Contas a Pagar", Componente: ContasPagarTab },
   configuracoes: { titulo: "Configurações", Componente: ConfiguracoesTab },
   usuarios: { titulo: "Usuários", Componente: UsuariosTab },
 }

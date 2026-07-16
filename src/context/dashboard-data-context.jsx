@@ -12,18 +12,25 @@ export function DashboardDataProvider({ children }) {
   const [clientes, setClientes] = useState([])
   const [materiaPrimas, setMateriaPrimas] = useState([])
   const [transacoes, setTransacoes] = useState([])
+  const [contasReceber, setContasReceber] = useState([])
+  const [contasPagar, setContasPagar] = useState([])
   const [carregando, setCarregando] = useState(true)
 
   async function carregarTudo() {
-    const [resClientes, resMateriaPrimas, resTransacoes] = await Promise.all([
-      supabase.from("clientes").select("*").order("created_at"),
-      supabase.from("materia_primas").select("*").order("created_at"),
-      supabase.from("transacoes").select("*").order("created_at"),
-    ])
+    const [resClientes, resMateriaPrimas, resTransacoes, resContasReceber, resContasPagar] =
+      await Promise.all([
+        supabase.from("clientes").select("*").order("created_at"),
+        supabase.from("materia_primas").select("*").order("created_at"),
+        supabase.from("transacoes").select("*").order("created_at"),
+        supabase.from("contas_receber").select("*").order("vencimento"),
+        supabase.from("contas_pagar").select("*").order("vencimento"),
+      ])
 
     if (!resClientes.error) setClientes(resClientes.data)
     if (!resMateriaPrimas.error) setMateriaPrimas(resMateriaPrimas.data)
     if (!resTransacoes.error) setTransacoes(resTransacoes.data)
+    if (!resContasReceber.error) setContasReceber(resContasReceber.data)
+    if (!resContasPagar.error) setContasPagar(resContasPagar.data)
     setCarregando(false)
   }
 
@@ -36,6 +43,8 @@ export function DashboardDataProvider({ children }) {
       .on("postgres_changes", { event: "*", schema: "public", table: "clientes" }, carregarTudo)
       .on("postgres_changes", { event: "*", schema: "public", table: "materia_primas" }, carregarTudo)
       .on("postgres_changes", { event: "*", schema: "public", table: "transacoes" }, carregarTudo)
+      .on("postgres_changes", { event: "*", schema: "public", table: "contas_receber" }, carregarTudo)
+      .on("postgres_changes", { event: "*", schema: "public", table: "contas_pagar" }, carregarTudo)
       .subscribe()
 
     return () => {
@@ -108,6 +117,48 @@ export function DashboardDataProvider({ children }) {
     if (error) alert("Erro ao remover transação: " + error.message)
   }
 
+  // ---------- Contas a Receber ----------
+  async function adicionarContaReceber(conta) {
+    const { error } = await supabase.from("contas_receber").insert(conta)
+    if (error) alert("Erro ao adicionar conta a receber: " + error.message)
+  }
+
+  async function marcarContaReceberComoRecebida(id) {
+    const { error } = await supabase.from("contas_receber").update({ status: "recebido" }).eq("id", id)
+    if (error) alert("Erro ao atualizar conta: " + error.message)
+  }
+
+  async function reabrirContaReceber(id) {
+    const { error } = await supabase.from("contas_receber").update({ status: "pendente" }).eq("id", id)
+    if (error) alert("Erro ao atualizar conta: " + error.message)
+  }
+
+  async function removerContaReceber(id) {
+    const { error } = await supabase.from("contas_receber").delete().eq("id", id)
+    if (error) alert("Erro ao remover conta: " + error.message)
+  }
+
+  // ---------- Contas a Pagar ----------
+  async function adicionarContaPagar(conta) {
+    const { error } = await supabase.from("contas_pagar").insert(conta)
+    if (error) alert("Erro ao adicionar conta a pagar: " + error.message)
+  }
+
+  async function marcarContaPagarComoPaga(id) {
+    const { error } = await supabase.from("contas_pagar").update({ status: "pago" }).eq("id", id)
+    if (error) alert("Erro ao atualizar conta: " + error.message)
+  }
+
+  async function reabrirContaPagar(id) {
+    const { error } = await supabase.from("contas_pagar").update({ status: "pendente" }).eq("id", id)
+    if (error) alert("Erro ao atualizar conta: " + error.message)
+  }
+
+  async function removerContaPagar(id) {
+    const { error } = await supabase.from("contas_pagar").delete().eq("id", id)
+    if (error) alert("Erro ao remover conta: " + error.message)
+  }
+
   // ---------- Limpar tudo ----------
   async function limparDados() {
     await supabase.from("transacoes").delete().neq("id", "00000000-0000-0000-0000-000000000000")
@@ -122,6 +173,8 @@ export function DashboardDataProvider({ children }) {
       clientes,
       materiaPrimas,
       transacoes,
+      contasReceber,
+      contasPagar,
     }
 
     const conteudo = JSON.stringify(backup, null, 2)
@@ -160,16 +213,24 @@ export function DashboardDataProvider({ children }) {
     const novosClientes = Array.isArray(dados.clientes) ? dados.clientes : []
     const novasMateriaPrimas = Array.isArray(dados.materiaPrimas) ? dados.materiaPrimas : []
     const novasTransacoes = Array.isArray(dados.transacoes) ? dados.transacoes : []
+    const novasContasReceber = Array.isArray(dados.contasReceber) ? dados.contasReceber : []
+    const novasContasPagar = Array.isArray(dados.contasPagar) ? dados.contasPagar : []
 
     // Substitui completamente o que está no banco compartilhado
     await supabase.from("transacoes").delete().neq("id", "00000000-0000-0000-0000-000000000000")
     await supabase.from("materia_primas").delete().neq("id", "00000000-0000-0000-0000-000000000000")
     await supabase.from("clientes").delete().neq("id", "00000000-0000-0000-0000-000000000000")
+    await supabase.from("contas_receber").delete().neq("id", "00000000-0000-0000-0000-000000000000")
+    await supabase.from("contas_pagar").delete().neq("id", "00000000-0000-0000-0000-000000000000")
 
     if (novosClientes.length) await supabase.from("clientes").insert(removerIds(novosClientes))
     if (novasMateriaPrimas.length)
       await supabase.from("materia_primas").insert(removerIds(novasMateriaPrimas))
     if (novasTransacoes.length) await supabase.from("transacoes").insert(removerIds(novasTransacoes))
+    if (novasContasReceber.length)
+      await supabase.from("contas_receber").insert(removerIds(novasContasReceber))
+    if (novasContasPagar.length)
+      await supabase.from("contas_pagar").insert(removerIds(novasContasPagar))
 
     await carregarTudo()
 
@@ -177,6 +238,8 @@ export function DashboardDataProvider({ children }) {
       clientes: novosClientes.length,
       materiaPrimas: novasMateriaPrimas.length,
       transacoes: novasTransacoes.length,
+      contasReceber: novasContasReceber.length,
+      contasPagar: novasContasPagar.length,
     }
   }
 
@@ -184,6 +247,8 @@ export function DashboardDataProvider({ children }) {
     clientes,
     materiaPrimas,
     transacoes,
+    contasReceber,
+    contasPagar,
     carregando,
     adicionarCliente,
     removerCliente,
@@ -191,6 +256,14 @@ export function DashboardDataProvider({ children }) {
     removerMateriaPrima,
     adicionarTransacao,
     removerTransacao,
+    adicionarContaReceber,
+    marcarContaReceberComoRecebida,
+    reabrirContaReceber,
+    removerContaReceber,
+    adicionarContaPagar,
+    marcarContaPagarComoPaga,
+    reabrirContaPagar,
+    removerContaPagar,
     limparDados,
     exportarDados,
     importarDados,
