@@ -133,3 +133,24 @@
     @apply font-sans;
     }
 }
+
+@keyframes conteudo-entra {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animar-entrada {
+  animation: conteudo-entra 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animar-entrada {
+    animation: none;
+  }
+}

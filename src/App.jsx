@@ -46,8 +46,8 @@ function ConteudoDashboard() {
   const { titulo, Componente } = TODAS_PAGINAS[paginaEfetiva]
 
   return (
-    <DashboardLayout paginaAtiva={paginaEfetiva} onSelecionarPagina={setPaginaAtiva}>
-      <div className="flex flex-col gap-4">
+    <DashboardLayout paginaAtiva={paginaEfetiva} onSelecionarPagina={setPaginaAtiva} titulo={titulo}>
+      <div key={paginaEfetiva} className="flex flex-col gap-4 animar-entrada">
         <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
           {titulo}
         </h1>
