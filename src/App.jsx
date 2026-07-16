@@ -10,6 +10,7 @@ import { ResumoClienteTab } from "@/pages/resumo-cliente-tab"
 import { TransacoesTab } from "@/pages/transacoes-tab"
 import { HistoricoMensalTab } from "@/pages/historico-mensal-tab"
 import { ConfiguracoesTab } from "@/pages/configuracoes-tab"
+import { UsuariosTab } from "@/pages/usuarios-tab"
 
 const TODAS_PAGINAS = {
   inicio: { titulo: "Início", Componente: InicioTab },
@@ -19,6 +20,7 @@ const TODAS_PAGINAS = {
   transacoes: { titulo: "Transações", Componente: TransacoesTab },
   historico: { titulo: "Histórico Mensal", Componente: HistoricoMensalTab },
   configuracoes: { titulo: "Configurações", Componente: ConfiguracoesTab },
+  usuarios: { titulo: "Usuários", Componente: UsuariosTab },
 }
 
 function ConteudoDashboard() {

@@ -25,7 +25,7 @@ const paginasDashboard = [
 
 export function AppSidebar({ paginaAtiva, onSelecionarPagina }) {
   const [menuAberto, setMenuAberto] = useState(true)
-  const { ehAdmin, podeAcessar, sair } = useAuth()
+  const { podeAcessar, sair } = useAuth()
 
   const paginasVisiveis = paginasDashboard.filter((pagina) => podeAcessar(pagina.chave))
 
@@ -56,16 +56,15 @@ export function AppSidebar({ paginaAtiva, onSelecionarPagina }) {
                 </SidebarMenuItem>
               )}
 
-              {ehAdmin && (
+              {podeAcessar("usuarios") && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
-                    render={
-                      <a href="#" className="no-underline text-inherit">
-                        <Users />
-                        <span>Usuários</span>
-                      </a>
-                    }
-                  />
+                    isActive={paginaAtiva === "usuarios"}
+                    onClick={() => onSelecionarPagina("usuarios")}
+                  >
+                    <Users />
+                    <span>Usuários</span>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
 
