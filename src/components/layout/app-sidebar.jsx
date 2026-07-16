@@ -1,5 +1,17 @@
 import { useState } from "react"
-import { Users, Settings, LayoutDashboard, Home, ChevronRight, LogOut } from "lucide-react"
+import {
+  Users,
+  Settings,
+  LayoutDashboard,
+  Home,
+  ChevronRight,
+  LogOut,
+  UserPlus,
+  Package,
+  ClipboardList,
+  ArrowLeftRight,
+  History,
+} from "lucide-react"
 import logoVilaPack from "@/assets/logo-vilapack.png"
 import { useAuth } from "@/context/auth-context"
 import {
@@ -16,11 +28,11 @@ import {
 } from "@/components/ui/sidebar"
 
 const paginasDashboard = [
-  { chave: "clientes", titulo: "Cadastro de Clientes" },
-  { chave: "materia-prima", titulo: "Saídas" },
-  { chave: "resumo-cliente", titulo: "Resumo por Cliente" },
-  { chave: "transacoes", titulo: "Transações" },
-  { chave: "historico", titulo: "Histórico Mensal" },
+  { chave: "clientes", titulo: "Cadastro de Clientes", Icone: UserPlus },
+  { chave: "materia-prima", titulo: "Saídas", Icone: Package },
+  { chave: "resumo-cliente", titulo: "Resumo por Cliente", Icone: ClipboardList },
+  { chave: "transacoes", titulo: "Transações", Icone: ArrowLeftRight },
+  { chave: "historico", titulo: "Histórico Mensal", Icone: History },
 ]
 
 export function AppSidebar({ paginaAtiva, onSelecionarPagina }) {
@@ -108,6 +120,7 @@ export function AppSidebar({ paginaAtiva, onSelecionarPagina }) {
                         onClick={() => onSelecionarPagina(pagina.chave)}
                         className="pl-8"
                       >
+                        <pagina.Icone />
                         <span>{pagina.titulo}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
