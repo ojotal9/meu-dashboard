@@ -2,15 +2,15 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
-import { DashboardDataProvider } from './context/dashboard-data-context.jsx'
+import { AuthProvider } from './context/auth-context.jsx'
 import { ThemeProvider } from './context/theme-context.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <ThemeProvider>
-      <DashboardDataProvider>
+      <AuthProvider>
         <App />
-      </DashboardDataProvider>
+      </AuthProvider>
     </ThemeProvider>
   </StrictMode>,
 )

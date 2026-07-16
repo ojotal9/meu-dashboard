@@ -1,10 +1,12 @@
 import { useState } from "react"
-import { Users, Settings, LayoutDashboard, Home, ChevronRight } from "lucide-react"
+import { Users, Settings, LayoutDashboard, Home, ChevronRight, LogOut } from "lucide-react"
 import logoVilaPack from "@/assets/logo-vilapack.png"
+import { useAuth } from "@/context/auth-context"
 import {
   Sidebar,
   SidebarHeader,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -23,6 +25,9 @@ const paginasDashboard = [
 
 export function AppSidebar({ paginaAtiva, onSelecionarPagina }) {
   const [menuAberto, setMenuAberto] = useState(true)
+  const { ehAdmin, podeAcessar, sair } = useAuth()
+
+  const paginasVisiveis = paginasDashboard.filter((pagina) => podeAcessar(pagina.chave))
 
   return (
     <Sidebar>
@@ -39,72 +44,91 @@ export function AppSidebar({ paginaAtiva, onSelecionarPagina }) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={paginaAtiva === "inicio"}
-                  onClick={() => onSelecionarPagina("inicio")}
-                >
-                  <Home />
-                  <span>Início</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {podeAcessar("inicio") && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={paginaAtiva === "inicio"}
+                    onClick={() => onSelecionarPagina("inicio")}
+                  >
+                    <Home />
+                    <span>Início</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
 
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  render={
-                    <a href="#" className="no-underline text-inherit">
-                      <Users />
-                      <span>Usuários</span>
-                    </a>
-                  }
-                />
-              </SidebarMenuItem>
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={paginaAtiva === "configuracoes"}
-                  onClick={() => onSelecionarPagina("configuracoes")}
-                >
-                  <Settings />
-                  <span>Configurações</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] font-semibold tracking-wider text-sidebar-foreground/45 uppercase">
-            Financeiro
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => setMenuAberto((aberto) => !aberto)}>
-                  <LayoutDashboard />
-                  <span>Módulos</span>
-                  <ChevronRight
-                    className={`ml-auto transition-transform ${menuAberto ? "rotate-90" : ""}`}
+              {ehAdmin && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    render={
+                      <a href="#" className="no-underline text-inherit">
+                        <Users />
+                        <span>Usuários</span>
+                      </a>
+                    }
                   />
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+                </SidebarMenuItem>
+              )}
 
-              {menuAberto &&
-                paginasDashboard.map((pagina) => (
-                  <SidebarMenuItem key={pagina.chave}>
-                    <SidebarMenuButton
-                      isActive={paginaAtiva === pagina.chave}
-                      onClick={() => onSelecionarPagina(pagina.chave)}
-                      className="pl-8"
-                    >
-                      <span>{pagina.titulo}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+              {podeAcessar("configuracoes") && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={paginaAtiva === "configuracoes"}
+                    onClick={() => onSelecionarPagina("configuracoes")}
+                  >
+                    <Settings />
+                    <span>Configurações</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {paginasVisiveis.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-[10px] font-semibold tracking-wider text-sidebar-foreground/45 uppercase">
+              Financeiro
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton onClick={() => setMenuAberto((aberto) => !aberto)}>
+                    <LayoutDashboard />
+                    <span>Módulos</span>
+                    <ChevronRight
+                      className={`ml-auto transition-transform ${menuAberto ? "rotate-90" : ""}`}
+                    />
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+
+                {menuAberto &&
+                  paginasVisiveis.map((pagina) => (
+                    <SidebarMenuItem key={pagina.chave}>
+                      <SidebarMenuButton
+                        isActive={paginaAtiva === pagina.chave}
+                        onClick={() => onSelecionarPagina(pagina.chave)}
+                        className="pl-8"
+                      >
+                        <span>{pagina.titulo}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
+
+      <SidebarFooter className="p-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={sair}>
+              <LogOut />
+              <span>Sair</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   )
 }
