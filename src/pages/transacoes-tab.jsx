@@ -27,7 +27,8 @@ const MESES = [
 
 const CATEGORIAS = [
   "Venda", "Serviço", "Matéria-prima", "Frete", "Salário",
-  "Aluguel", "Imposto", "Manutenção", "Outros",
+  "Aluguel", "Imposto", "Manutenção", "Contas a Pagar", "Contas a Receber", "Outros",
+
 ]
 
 function anosDisponiveis() {

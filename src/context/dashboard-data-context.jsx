@@ -173,6 +173,15 @@ export function DashboardDataProvider({ children }) {
       return
     }
     setContasReceber((prev) => [...prev, data])
+
+    // Toda conta a receber já entra automaticamente como entrada nas transações/gráficos
+    await adicionarTransacao({
+      cliente: `Conta a receber: ${data.descricao}`,
+      valor: data.valor,
+      tipo: "entrada",
+      categoria: "Contas a Receber",
+      data: data.vencimento.slice(0, 7),
+    })
   }
 
   async function marcarContaReceberComoRecebida(id) {
@@ -204,12 +213,30 @@ export function DashboardDataProvider({ children }) {
   }
 
   async function removerContaReceber(id) {
+    const conta = contasReceber.find((c) => c.id === id)
     const { error } = await supabase.from("contas_receber").delete().eq("id", id)
     if (error) {
       alert("Erro ao remover conta: " + error.message)
       return
     }
     setContasReceber((prev) => prev.filter((c) => c.id !== id))
+
+    // Remove também a entrada correspondente das transações
+    if (conta) {
+      const cliente = `Conta a receber: ${conta.descricao}`
+      const mes = conta.vencimento.slice(0, 7)
+      await supabase
+        .from("transacoes")
+        .delete()
+        .eq("tipo", "entrada")
+        .eq("cliente", cliente)
+        .eq("valor", conta.valor)
+        .eq("data", mes)
+
+      setTransacoes((prev) =>
+        prev.filter((t) => !(t.tipo === "entrada" && t.cliente === cliente && t.valor === conta.valor && t.data === mes))
+      )
+    }
   }
 
   // ---------- Contas a Pagar ----------
@@ -220,6 +247,15 @@ export function DashboardDataProvider({ children }) {
       return
     }
     setContasPagar((prev) => [...prev, data])
+
+    // Toda conta a pagar já entra automaticamente como saída nas transações/gráficos
+    await adicionarTransacao({
+      cliente: `Conta a pagar: ${data.descricao}`,
+      valor: data.valor,
+      tipo: "saida",
+      categoria: "Contas a Pagar",
+      data: data.vencimento.slice(0, 7),
+    })
   }
 
   async function marcarContaPagarComoPaga(id) {
@@ -251,12 +287,30 @@ export function DashboardDataProvider({ children }) {
   }
 
   async function removerContaPagar(id) {
+    const conta = contasPagar.find((c) => c.id === id)
     const { error } = await supabase.from("contas_pagar").delete().eq("id", id)
     if (error) {
       alert("Erro ao remover conta: " + error.message)
       return
     }
     setContasPagar((prev) => prev.filter((c) => c.id !== id))
+
+    // Remove também a saída correspondente das transações
+    if (conta) {
+      const cliente = `Conta a pagar: ${conta.descricao}`
+      const mes = conta.vencimento.slice(0, 7)
+      await supabase
+        .from("transacoes")
+        .delete()
+        .eq("tipo", "saida")
+        .eq("cliente", cliente)
+        .eq("valor", conta.valor)
+        .eq("data", mes)
+
+      setTransacoes((prev) =>
+        prev.filter((t) => !(t.tipo === "saida" && t.cliente === cliente && t.valor === conta.valor && t.data === mes))
+      )
+    }
   }
 
   // ---------- Limpar tudo ----------
