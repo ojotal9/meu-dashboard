@@ -34,11 +34,20 @@ const PAGINAS_DISPONIVEIS = [
   { chave: "usuarios", titulo: "Usuários" },
 ]
 
-const FORMULARIO_VAZIO = { id: "", nome: "", email: "", role: "funcionario", paginas_permitidas: [] }
+const FORMULARIO_VAZIO = { nome: "", email: "", senha: "", role: "funcionario", paginas_permitidas: [] }
 
 export function UsuariosTab() {
-  const { sessao, perfil, ehAdmin, sair, todosPerfis, carregarTodosPerfis, criarPerfil, atualizarPerfil, removerPerfil } =
-    useAuth()
+  const {
+    sessao,
+    perfil,
+    ehAdmin,
+    sair,
+    todosPerfis,
+    carregarTodosPerfis,
+    atualizarPerfil,
+    criarUsuarioCompleto,
+    removerUsuarioCompleto,
+  } = useAuth()
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [editandoId, setEditandoId] = useState(null)
@@ -61,9 +70,9 @@ export function UsuariosTab() {
   function iniciarEdicao(p) {
     setEditandoId(p.id)
     setFormulario({
-      id: p.id,
       nome: p.nome || "",
       email: p.email || "",
+      senha: "",
       role: p.role,
       paginas_permitidas: p.paginas_permitidas || [],
     })
@@ -77,27 +86,40 @@ export function UsuariosTab() {
   }
 
   async function handleSalvar() {
-    if (!editandoId && !formulario.id.trim()) {
-      alert("Cole o UUID do usuário (copiado do Supabase Authentication → Users)")
-      return
-    }
     if (!formulario.nome.trim()) {
-      alert("Digite um nome pra identificar essa pessoa")
+      alert("Digite o nome da pessoa")
       return
     }
 
     setSalvando(true)
 
-    const dados = {
-      nome: formulario.nome.trim(),
-      email: formulario.email.trim(),
-      role: formulario.role,
-      paginas_permitidas: formulario.role === "admin" ? [] : formulario.paginas_permitidas,
+    let resultado
+    if (editandoId) {
+      resultado = await atualizarPerfil(editandoId, {
+        nome: formulario.nome.trim(),
+        email: formulario.email.trim(),
+        role: formulario.role,
+        paginas_permitidas: formulario.role === "admin" ? [] : formulario.paginas_permitidas,
+      })
+    } else {
+      if (!formulario.email.trim() || !formulario.senha.trim()) {
+        setSalvando(false)
+        alert("Preencha e-mail e senha pra criar o login")
+        return
+      }
+      if (formulario.senha.trim().length < 6) {
+        setSalvando(false)
+        alert("A senha precisa ter pelo menos 6 caracteres")
+        return
+      }
+      resultado = await criarUsuarioCompleto({
+        email: formulario.email.trim(),
+        senha: formulario.senha.trim(),
+        nome: formulario.nome.trim(),
+        role: formulario.role,
+        paginas_permitidas: formulario.paginas_permitidas,
+      })
     }
-
-    const resultado = editandoId
-      ? await atualizarPerfil(editandoId, dados)
-      : await criarPerfil({ id: formulario.id.trim(), ...dados })
 
     setSalvando(false)
 
@@ -114,9 +136,9 @@ export function UsuariosTab() {
       alert("Você não pode remover o próprio acesso por aqui.")
       return
     }
-    if (!confirm("Remover o acesso dessa pessoa ao dashboard? Isso não apaga o login dela, só tira o acesso.")) return
+    if (!confirm("Remover essa pessoa? Isso apaga o login dela por completo, não dá pra desfazer.")) return
 
-    const { error } = await removerPerfil(id)
+    const { error } = await removerUsuarioCompleto(id)
     if (error) alert("Erro ao remover: " + error.message)
   }
 
@@ -168,25 +190,12 @@ export function UsuariosTab() {
             <CardTitle>{editandoId ? "Editar usuário" : "Adicionar usuário"}</CardTitle>
             {!editandoId && (
               <CardDescription>
-                Primeiro crie o login em Supabase → Authentication → Users → Add user, marcando "Auto Confirm
-                User". Depois cole aqui o UUID gerado.
+                Isso já cria o login de verdade — a pessoa consegue entrar direto com esse e-mail e senha.
               </CardDescription>
             )}
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="flex flex-wrap gap-2">
-              {!editandoId && (
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="uuid-usuario">UUID (do Supabase Auth)</Label>
-                  <Input
-                    id="uuid-usuario"
-                    placeholder="ex: 87864ccb-51c9-4a3c-a538-847333084109"
-                    value={formulario.id}
-                    onChange={(e) => setFormulario((f) => ({ ...f, id: e.target.value }))}
-                    className="w-[280px]"
-                  />
-                </div>
-              )}
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="nome-usuario">Nome</Label>
                 <Input
@@ -197,15 +206,29 @@ export function UsuariosTab() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="email-usuario">E-mail (só pra identificar)</Label>
+                <Label htmlFor="email-usuario">E-mail</Label>
                 <Input
                   id="email-usuario"
                   type="email"
                   value={formulario.email}
                   onChange={(e) => setFormulario((f) => ({ ...f, email: e.target.value }))}
+                  disabled={!!editandoId}
                   className="w-[220px]"
                 />
               </div>
+              {!editandoId && (
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="senha-usuario">Senha</Label>
+                  <Input
+                    id="senha-usuario"
+                    type="text"
+                    placeholder="mín. 6 caracteres"
+                    value={formulario.senha}
+                    onChange={(e) => setFormulario((f) => ({ ...f, senha: e.target.value }))}
+                    className="w-[160px]"
+                  />
+                </div>
+              )}
               <div className="flex flex-col gap-1.5">
                 <Label>Papel</Label>
                 <Select

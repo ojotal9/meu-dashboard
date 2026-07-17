@@ -82,6 +82,57 @@ export function AuthProvider({ children }) {
     return { error }
   }
 
+  // Cria o login (e-mail + senha) e o perfil de uma vez, via função de servidor
+  // (precisa da chave secreta do Supabase, que só existe no servidor, nunca no navegador)
+  async function criarUsuarioCompleto({ email, senha, nome, role, paginas_permitidas }) {
+    try {
+      const resposta = await fetch("/api/criar-usuario", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessao?.access_token}`,
+        },
+        body: JSON.stringify({ email, senha, nome, role, paginas_permitidas }),
+      })
+      const resultado = await resposta.json()
+
+      if (!resposta.ok) {
+        return { data: null, error: { message: resultado.error || "Erro ao criar usuário" } }
+      }
+
+      setTodosPerfis((prev) =>
+        [...prev, resultado.perfil].sort((a, b) => (a.nome || "").localeCompare(b.nome || ""))
+      )
+      return { data: resultado.perfil, error: null }
+    } catch {
+      return { data: null, error: { message: "Não foi possível falar com o servidor" } }
+    }
+  }
+
+  // Remove o login por completo (não só o acesso ao dashboard), via função de servidor
+  async function removerUsuarioCompleto(id) {
+    try {
+      const resposta = await fetch("/api/remover-usuario", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessao?.access_token}`,
+        },
+        body: JSON.stringify({ id }),
+      })
+      const resultado = await resposta.json().catch(() => ({}))
+
+      if (!resposta.ok) {
+        return { error: { message: resultado.error || "Erro ao remover usuário" } }
+      }
+
+      setTodosPerfis((prev) => prev.filter((p) => p.id !== id))
+      return { error: null }
+    } catch {
+      return { error: { message: "Não foi possível falar com o servidor" } }
+    }
+  }
+
   const valor = {
     sessao,
     perfil,
@@ -95,6 +146,8 @@ export function AuthProvider({ children }) {
     criarPerfil,
     atualizarPerfil,
     removerPerfil,
+    criarUsuarioCompleto,
+    removerUsuarioCompleto,
   }
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>
