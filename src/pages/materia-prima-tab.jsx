@@ -1,7 +1,8 @@
 import { useState } from "react"
-import { Pencil, X } from "lucide-react"
+import { Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectTrigger,
@@ -9,6 +10,14 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet"
 import {
   Table,
   TableHeader,
@@ -36,8 +45,11 @@ export function MateriaPrimaTab() {
   const [dataTexto, setDataTexto] = useState(dataIsoParaBr(hoje()))
   const [observacao, setObservacao] = useState("")
   const [busca, setBusca] = useState("")
-  const [editandoId, setEditandoId] = useState(null)
   const [ordenacao, setOrdenacao] = useState({ coluna: null, direcao: "asc" })
+
+  const [sheetAberto, setSheetAberto] = useState(false)
+  const [editandoId, setEditandoId] = useState(null)
+  const [edicao, setEdicao] = useState({ tipo: "Tinta", valor: "", dataTexto: "", observacao: "" })
 
   function aoClicarColuna(coluna) {
     setOrdenacao((o) =>
@@ -45,27 +57,7 @@ export function MateriaPrimaTab() {
     )
   }
 
-  function handleDataChange(e) {
-    setDataTexto(mascararDataDigitada(e.target.value))
-  }
-
-  function iniciarEdicao(item) {
-    setEditandoId(item.id)
-    setTipo(item.tipo)
-    setValor(String(item.valor))
-    setDataTexto(dataIsoParaBr(item.data))
-    setObservacao(item.observacao || "")
-  }
-
-  function cancelarEdicao() {
-    setEditandoId(null)
-    setTipo("Tinta")
-    setValor("")
-    setDataTexto(dataIsoParaBr(hoje()))
-    setObservacao("")
-  }
-
-  function handleSalvar() {
+  function handleAdicionar() {
     const valorTexto = valor.trim().replace(",", ".")
 
     if (!valorTexto || !dataTexto) {
@@ -85,20 +77,56 @@ export function MateriaPrimaTab() {
       return
     }
 
-    const dados = {
+    adicionarMateriaPrima({
       tipo,
       valor: valorNumerico,
       data: dataIso,
       observacao: observacao.trim(),
+    })
+
+    setValor("")
+    setObservacao("")
+  }
+
+  function abrirEdicao(item) {
+    setEditandoId(item.id)
+    setEdicao({
+      tipo: item.tipo,
+      valor: String(item.valor),
+      dataTexto: dataIsoParaBr(item.data),
+      observacao: item.observacao || "",
+    })
+    setSheetAberto(true)
+  }
+
+  function handleSalvarEdicao() {
+    const valorTexto = edicao.valor.trim().replace(",", ".")
+
+    if (!valorTexto || !edicao.dataTexto) {
+      alert("Preencha o valor e a data")
+      return
     }
 
-    if (editandoId) {
-      atualizarMateriaPrima(editandoId, dados)
-    } else {
-      adicionarMateriaPrima(dados)
+    const dataIso = dataBrParaIso(edicao.dataTexto)
+    if (!dataIso) {
+      alert("Digite a data no formato dd/mm/aaaa")
+      return
     }
 
-    cancelarEdicao()
+    const valorNumerico = parseFloat(valorTexto)
+    if (isNaN(valorNumerico)) {
+      alert("Digite o valor usando só números, tipo 150.00")
+      return
+    }
+
+    atualizarMateriaPrima(editandoId, {
+      tipo: edicao.tipo,
+      valor: valorNumerico,
+      data: dataIso,
+      observacao: edicao.observacao.trim(),
+    })
+
+    setSheetAberto(false)
   }
 
   function formatarReais(valor) {
@@ -132,19 +160,13 @@ export function MateriaPrimaTab() {
         <Input
           placeholder="dd/mm/aaaa"
           value={dataTexto}
-          onChange={handleDataChange}
+          onChange={(e) => setDataTexto(mascararDataDigitada(e.target.value))}
           inputMode="numeric"
           maxLength={10}
           className="max-w-[140px]"
         />
         <Input placeholder="Observação" value={observacao} onChange={(e) => setObservacao(e.target.value)} className="max-w-[220px]" />
-        <Button onClick={handleSalvar}>{editandoId ? "Salvar edição" : "Adicionar"}</Button>
-        {editandoId && (
-          <Button variant="outline" onClick={cancelarEdicao}>
-            <X />
-            Cancelar
-          </Button>
-        )}
+        <Button onClick={handleAdicionar}>Adicionar</Button>
       </div>
 
       <CampoBusca value={busca} onChange={setBusca} placeholder="Buscar por tipo ou observação..." />
@@ -167,7 +189,7 @@ export function MateriaPrimaTab() {
               <TableCell data-label="Data">{formatarDataBR(item.data)}</TableCell>
               <TableCell data-label="Observação">{item.observacao}</TableCell>
               <TableCell className="flex gap-2" data-label="Ações">
-                <Button variant="outline" size="sm" onClick={() => iniciarEdicao(item)}>
+                <Button variant="outline" size="sm" onClick={() => abrirEdicao(item)}>
                   <Pencil />
                   Editar
                 </Button>
@@ -186,6 +208,60 @@ export function MateriaPrimaTab() {
           )}
         </TableBody>
       </Table>
+
+      <Sheet open={sheetAberto} onOpenChange={setSheetAberto}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Editar saída</SheetTitle>
+            <SheetDescription>Altere os dados e salve.</SheetDescription>
+          </SheetHeader>
+          <div className="flex flex-col gap-4 px-4">
+            <div className="flex flex-col gap-1.5">
+              <Label>Tipo</Label>
+              <Select value={edicao.tipo} onValueChange={(v) => setEdicao((f) => ({ ...f, tipo: v }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIPOS.map((t) => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="edicao-valor">Valor</Label>
+              <Input
+                id="edicao-valor"
+                value={edicao.valor}
+                onChange={(e) => setEdicao((f) => ({ ...f, valor: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="edicao-data">Data</Label>
+              <Input
+                id="edicao-data"
+                placeholder="dd/mm/aaaa"
+                value={edicao.dataTexto}
+                onChange={(e) => setEdicao((f) => ({ ...f, dataTexto: mascararDataDigitada(e.target.value) }))}
+                inputMode="numeric"
+                maxLength={10}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="edicao-observacao">Observação</Label>
+              <Input
+                id="edicao-observacao"
+                value={edicao.observacao}
+                onChange={(e) => setEdicao((f) => ({ ...f, observacao: e.target.value }))}
+              />
+            </div>
+          </div>
+          <SheetFooter>
+            <Button onClick={handleSalvarEdicao}>Salvar alterações</Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }

@@ -1,7 +1,8 @@
 import { useState } from "react"
-import { Pencil, X } from "lucide-react"
+import { Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectTrigger,
@@ -9,6 +10,14 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet"
 import {
   Table,
   TableHeader,
@@ -54,8 +63,18 @@ export function TransacoesTab() {
   const [mes, setMes] = useState(mesAtual)
   const [ano, setAno] = useState(String(anoAtual))
   const [busca, setBusca] = useState("")
-  const [editandoId, setEditandoId] = useState(null)
   const [ordenacao, setOrdenacao] = useState({ coluna: null, direcao: "asc" })
+
+  const [sheetAberto, setSheetAberto] = useState(false)
+  const [editandoId, setEditandoId] = useState(null)
+  const [edicao, setEdicao] = useState({
+    cliente: "",
+    valor: "",
+    tipo: "entrada",
+    categoria: "Outros",
+    mes: mesAtual,
+    ano: String(anoAtual),
+  })
 
   function aoClicarColuna(coluna) {
     setOrdenacao((o) =>
@@ -63,28 +82,7 @@ export function TransacoesTab() {
     )
   }
 
-  function iniciarEdicao(t) {
-    setEditandoId(t.id)
-    setCliente(t.cliente)
-    setValor(String(t.valor))
-    setTipo(t.tipo)
-    setCategoria(t.categoria || "Outros")
-    const [anoData, mesData] = (t.data || "").split("-")
-    setAno(anoData || String(anoAtual))
-    setMes(MESES[parseInt(mesData, 10) - 1] || mesAtual)
-  }
-
-  function cancelarEdicao() {
-    setEditandoId(null)
-    setCliente("")
-    setValor("")
-    setTipo("entrada")
-    setCategoria("Outros")
-    setMes(mesAtual)
-    setAno(String(anoAtual))
-  }
-
-  function handleSalvar() {
+  function handleAdicionar() {
     const valorTexto = valor.trim().replace(",", ".")
 
     if (!cliente || !valorTexto) {
@@ -105,13 +103,50 @@ export function TransacoesTab() {
     const numeroMes = MESES.indexOf(mes) + 1
     const data = `${ano}-${String(numeroMes).padStart(2, "0")}`
 
-    if (editandoId) {
-      atualizarTransacao(editandoId, { cliente, valor: valorNumerico, tipo, categoria, data })
-    } else {
-      adicionarTransacao({ cliente, valor: valorNumerico, tipo, categoria, data })
+    adicionarTransacao({ cliente, valor: valorNumerico, tipo, categoria, data })
+    setValor("")
+  }
+
+  function abrirEdicao(t) {
+    setEditandoId(t.id)
+    const [anoData, mesData] = (t.data || "").split("-")
+    setEdicao({
+      cliente: t.cliente,
+      valor: String(t.valor),
+      tipo: t.tipo,
+      categoria: t.categoria || "Outros",
+      ano: anoData || String(anoAtual),
+      mes: MESES[parseInt(mesData, 10) - 1] || mesAtual,
+    })
+    setSheetAberto(true)
+  }
+
+  function handleSalvarEdicao() {
+    const valorTexto = edicao.valor.trim().replace(",", ".")
+
+    if (!edicao.cliente || !valorTexto) {
+      alert("Selecione o cliente e preencha o valor")
+      return
     }
 
-    cancelarEdicao()
+    const valorNumerico = parseFloat(valorTexto)
+    if (isNaN(valorNumerico)) {
+      alert("Digite o valor usando só números, tipo 150.00")
+      return
+    }
+
+    const numeroMes = MESES.indexOf(edicao.mes) + 1
+    const data = `${edicao.ano}-${String(numeroMes).padStart(2, "0")}`
+
+    atualizarTransacao(editandoId, {
+      cliente: edicao.cliente,
+      valor: valorNumerico,
+      tipo: edicao.tipo,
+      categoria: edicao.categoria,
+      data,
+    })
+
+    setSheetAberto(false)
   }
 
   const termo = busca.trim().toLowerCase()
@@ -182,13 +217,7 @@ export function TransacoesTab() {
           </SelectContent>
         </Select>
 
-        <Button onClick={handleSalvar}>{editandoId ? "Salvar edição" : "Adicionar"}</Button>
-        {editandoId && (
-          <Button variant="outline" onClick={cancelarEdicao}>
-            <X />
-            Cancelar
-          </Button>
-        )}
+        <Button onClick={handleAdicionar}>Adicionar</Button>
       </div>
 
       <CampoBusca value={busca} onChange={setBusca} placeholder="Buscar por cliente ou categoria..." />
@@ -213,7 +242,7 @@ export function TransacoesTab() {
               <TableCell data-label="Categoria">{t.categoria || "—"}</TableCell>
               <TableCell data-label="Data">{formatarMesAnoBR(t.data)}</TableCell>
               <TableCell className="flex gap-2" data-label="Ações">
-                <Button variant="outline" size="sm" onClick={() => iniciarEdicao(t)}>
+                <Button variant="outline" size="sm" onClick={() => abrirEdicao(t)}>
                   <Pencil />
                   Editar
                 </Button>
@@ -232,6 +261,94 @@ export function TransacoesTab() {
           )}
         </TableBody>
       </Table>
+
+      <Sheet open={sheetAberto} onOpenChange={setSheetAberto}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Editar transação</SheetTitle>
+            <SheetDescription>Altere os dados e salve.</SheetDescription>
+          </SheetHeader>
+          <div className="flex flex-col gap-4 px-4">
+            <div className="flex flex-col gap-1.5">
+              <Label>Cliente</Label>
+              <Select value={edicao.cliente} onValueChange={(v) => setEdicao((f) => ({ ...f, cliente: v }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {clientes.map((c) => (
+                    <SelectItem key={c.id} value={c.nome}>{c.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="edicao-valor-transacao">Valor</Label>
+              <Input
+                id="edicao-valor-transacao"
+                value={edicao.valor}
+                onChange={(e) => setEdicao((f) => ({ ...f, valor: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>Tipo</Label>
+              <Select value={edicao.tipo} onValueChange={(v) => setEdicao((f) => ({ ...f, tipo: v }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="entrada">entrada</SelectItem>
+                  <SelectItem value="saida">saída</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>Categoria</Label>
+              <Select value={edicao.categoria} onValueChange={(v) => setEdicao((f) => ({ ...f, categoria: v }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIAS.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2">
+              <div className="flex flex-1 flex-col gap-1.5">
+                <Label>Mês</Label>
+                <Select value={edicao.mes} onValueChange={(v) => setEdicao((f) => ({ ...f, mes: v }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MESES.map((m) => (
+                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>Ano</Label>
+                <Select value={edicao.ano} onValueChange={(v) => setEdicao((f) => ({ ...f, ano: v }))}>
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {anosDisponiveis().map((a) => (
+                      <SelectItem key={a} value={String(a)}>{a}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <SheetFooter>
+            <Button onClick={handleSalvarEdicao}>Salvar alterações</Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }

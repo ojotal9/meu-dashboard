@@ -1,7 +1,16 @@
 import { useState } from "react"
-import { Pencil, X } from "lucide-react"
+import { Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet"
 import {
   Table,
   TableHeader,
@@ -20,10 +29,13 @@ const FORMULARIO_VAZIO = { nome: "", telefone: "", email: "", cpf: "", represent
 export function ClientesTab() {
   const { clientes, adicionarCliente, atualizarCliente, removerCliente } = useDashboardData()
 
-  const [formulario, setFormulario] = useState(FORMULARIO_VAZIO)
-  const [editandoId, setEditandoId] = useState(null)
+  const [novoCliente, setNovoCliente] = useState(FORMULARIO_VAZIO)
   const [busca, setBusca] = useState("")
   const [ordenacao, setOrdenacao] = useState({ coluna: null, direcao: "asc" })
+
+  const [sheetAberto, setSheetAberto] = useState(false)
+  const [editandoId, setEditandoId] = useState(null)
+  const [formularioEdicao, setFormularioEdicao] = useState(FORMULARIO_VAZIO)
 
   function aoClicarColuna(coluna) {
     setOrdenacao((o) =>
@@ -31,43 +43,50 @@ export function ClientesTab() {
     )
   }
 
-  function iniciarEdicao(cliente) {
+  function handleAdicionar() {
+    if (!novoCliente.nome.trim()) {
+      alert("Digite pelo menos o nome do cliente")
+      return
+    }
+
+    adicionarCliente({
+      nome: novoCliente.nome.trim(),
+      telefone: novoCliente.telefone.trim(),
+      email: novoCliente.email.trim(),
+      cpf: novoCliente.cpf.trim(),
+      representante: novoCliente.representante.trim(),
+    })
+
+    setNovoCliente(FORMULARIO_VAZIO)
+  }
+
+  function abrirEdicao(cliente) {
     setEditandoId(cliente.id)
-    setFormulario({
+    setFormularioEdicao({
       nome: cliente.nome || "",
       telefone: cliente.telefone || "",
       email: cliente.email || "",
       cpf: cliente.cpf || "",
       representante: cliente.representante || "",
     })
+    setSheetAberto(true)
   }
 
-  function cancelarEdicao() {
-    setEditandoId(null)
-    setFormulario(FORMULARIO_VAZIO)
-  }
-
-  function handleSalvar() {
-    if (!formulario.nome.trim()) {
+  function handleSalvarEdicao() {
+    if (!formularioEdicao.nome.trim()) {
       alert("Digite pelo menos o nome do cliente")
       return
     }
 
-    const dados = {
-      nome: formulario.nome.trim(),
-      telefone: formulario.telefone.trim(),
-      email: formulario.email.trim(),
-      cpf: formulario.cpf.trim(),
-      representante: formulario.representante.trim(),
-    }
+    atualizarCliente(editandoId, {
+      nome: formularioEdicao.nome.trim(),
+      telefone: formularioEdicao.telefone.trim(),
+      email: formularioEdicao.email.trim(),
+      cpf: formularioEdicao.cpf.trim(),
+      representante: formularioEdicao.representante.trim(),
+    })
 
-    if (editandoId) {
-      atualizarCliente(editandoId, dados)
-    } else {
-      adicionarCliente(dados)
-    }
-
-    cancelarEdicao()
+    setSheetAberto(false)
   }
 
   const termo = busca.trim().toLowerCase()
@@ -83,18 +102,12 @@ export function ClientesTab() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-2">
-        <Input placeholder="Nome" value={formulario.nome} onChange={(e) => setFormulario((f) => ({ ...f, nome: e.target.value }))} className="max-w-[180px]" />
-        <Input placeholder="Telefone" value={formulario.telefone} onChange={(e) => setFormulario((f) => ({ ...f, telefone: e.target.value }))} className="max-w-[140px]" />
-        <Input placeholder="E-mail" value={formulario.email} onChange={(e) => setFormulario((f) => ({ ...f, email: e.target.value }))} className="max-w-[180px]" />
-        <Input placeholder="CPF" value={formulario.cpf} onChange={(e) => setFormulario((f) => ({ ...f, cpf: e.target.value }))} className="max-w-[140px]" />
-        <Input placeholder="Representante" value={formulario.representante} onChange={(e) => setFormulario((f) => ({ ...f, representante: e.target.value }))} className="max-w-[180px]" />
-        <Button onClick={handleSalvar}>{editandoId ? "Salvar edição" : "Adicionar cliente"}</Button>
-        {editandoId && (
-          <Button variant="outline" onClick={cancelarEdicao}>
-            <X />
-            Cancelar
-          </Button>
-        )}
+        <Input placeholder="Nome" value={novoCliente.nome} onChange={(e) => setNovoCliente((f) => ({ ...f, nome: e.target.value }))} className="max-w-[180px]" />
+        <Input placeholder="Telefone" value={novoCliente.telefone} onChange={(e) => setNovoCliente((f) => ({ ...f, telefone: e.target.value }))} className="max-w-[140px]" />
+        <Input placeholder="E-mail" value={novoCliente.email} onChange={(e) => setNovoCliente((f) => ({ ...f, email: e.target.value }))} className="max-w-[180px]" />
+        <Input placeholder="CPF" value={novoCliente.cpf} onChange={(e) => setNovoCliente((f) => ({ ...f, cpf: e.target.value }))} className="max-w-[140px]" />
+        <Input placeholder="Representante" value={novoCliente.representante} onChange={(e) => setNovoCliente((f) => ({ ...f, representante: e.target.value }))} className="max-w-[180px]" />
+        <Button onClick={handleAdicionar}>Adicionar cliente</Button>
       </div>
 
       <CampoBusca value={busca} onChange={setBusca} placeholder="Buscar cliente por nome, telefone, e-mail ou CPF..." />
@@ -119,7 +132,7 @@ export function ClientesTab() {
               <TableCell data-label="CPF">{cliente.cpf}</TableCell>
               <TableCell data-label="Representante">{cliente.representante}</TableCell>
               <TableCell className="flex gap-2" data-label="Ações">
-                <Button variant="outline" size="sm" onClick={() => iniciarEdicao(cliente)}>
+                <Button variant="outline" size="sm" onClick={() => abrirEdicao(cliente)}>
                   <Pencil />
                   Editar
                 </Button>
@@ -138,6 +151,61 @@ export function ClientesTab() {
           )}
         </TableBody>
       </Table>
+
+      <Sheet open={sheetAberto} onOpenChange={setSheetAberto}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Editar cliente</SheetTitle>
+            <SheetDescription>Altere os dados e salve.</SheetDescription>
+          </SheetHeader>
+          <div className="flex flex-col gap-4 px-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="edicao-nome">Nome</Label>
+              <Input
+                id="edicao-nome"
+                value={formularioEdicao.nome}
+                onChange={(e) => setFormularioEdicao((f) => ({ ...f, nome: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="edicao-telefone">Telefone</Label>
+              <Input
+                id="edicao-telefone"
+                value={formularioEdicao.telefone}
+                onChange={(e) => setFormularioEdicao((f) => ({ ...f, telefone: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="edicao-email">E-mail</Label>
+              <Input
+                id="edicao-email"
+                type="email"
+                value={formularioEdicao.email}
+                onChange={(e) => setFormularioEdicao((f) => ({ ...f, email: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="edicao-cpf">CPF</Label>
+              <Input
+                id="edicao-cpf"
+                value={formularioEdicao.cpf}
+                onChange={(e) => setFormularioEdicao((f) => ({ ...f, cpf: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="edicao-representante">Representante</Label>
+              <Input
+                id="edicao-representante"
+                value={formularioEdicao.representante}
+                onChange={(e) => setFormularioEdicao((f) => ({ ...f, representante: e.target.value }))}
+              />
+            </div>
+          </div>
+          <SheetFooter>
+            <Button onClick={handleSalvarEdicao}>Salvar alterações</Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
