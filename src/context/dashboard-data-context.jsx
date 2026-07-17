@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
+import { useToast } from "@/context/toast-context"
 
 const DashboardDataContext = createContext(null)
 
@@ -9,6 +10,7 @@ function removerIds(itens) {
 }
 
 export function DashboardDataProvider({ children }) {
+  const { mostrarToast } = useToast()
   const [clientes, setClientes] = useState([])
   const [materiaPrimas, setMateriaPrimas] = useState([])
   const [transacoes, setTransacoes] = useState([])
@@ -80,6 +82,17 @@ export function DashboardDataProvider({ children }) {
       return
     }
     setClientes((prev) => [...prev, data])
+    mostrarToast("Cliente adicionado")
+  }
+
+  async function atualizarCliente(id, mudancas) {
+    const { data, error } = await supabase.from("clientes").update(mudancas).eq("id", id).select().single()
+    if (error) {
+      alert("Erro ao atualizar cliente: " + error.message)
+      return
+    }
+    setClientes((prev) => prev.map((c) => (c.id === id ? data : c)))
+    mostrarToast("Cliente atualizado")
   }
 
   async function removerCliente(id) {
@@ -89,6 +102,7 @@ export function DashboardDataProvider({ children }) {
       return
     }
     setClientes((prev) => prev.filter((c) => c.id !== id))
+    mostrarToast("Cliente removido")
   }
 
   // ---------- Matéria-prima ----------
@@ -107,13 +121,58 @@ export function DashboardDataProvider({ children }) {
     setMateriaPrimas((prev) => [...prev, data])
 
     // Toda compra de matéria-prima também vira uma "saída" automática nas transações
-    await adicionarTransacao({
-      cliente: `Matéria-prima: ${data.tipo}`,
-      valor: data.valor,
-      tipo: "saida",
-      categoria: "Matéria-prima",
-      data: data.data,
-    })
+    await adicionarTransacao(
+      {
+        cliente: `Matéria-prima: ${data.tipo}`,
+        valor: data.valor,
+        tipo: "saida",
+        categoria: "Matéria-prima",
+        data: data.data,
+      },
+      { semAviso: true }
+    )
+
+    mostrarToast("Saída adicionada")
+  }
+
+  async function atualizarMateriaPrima(id, mudancas) {
+    const itemAntigo = materiaPrimas.find((m) => m.id === id)
+    const { data, error } = await supabase
+      .from("materia_primas")
+      .update(mudancas)
+      .eq("id", id)
+      .select()
+      .single()
+
+    if (error) {
+      alert("Erro ao atualizar saída: " + error.message)
+      return
+    }
+
+    setMateriaPrimas((prev) => prev.map((m) => (m.id === id ? data : m)))
+
+    // Atualiza também a transação automática que essa saída gerou
+    if (itemAntigo) {
+      const { data: transacaoAtualizada } = await supabase
+        .from("transacoes")
+        .update({
+          cliente: `Matéria-prima: ${data.tipo}`,
+          valor: data.valor,
+          data: data.data,
+        })
+        .eq("tipo", "saida")
+        .eq("cliente", `Matéria-prima: ${itemAntigo.tipo}`)
+        .eq("valor", itemAntigo.valor)
+        .eq("data", itemAntigo.data)
+        .select()
+        .single()
+
+      if (transacaoAtualizada) {
+        setTransacoes((prev) => prev.map((t) => (t.id === transacaoAtualizada.id ? transacaoAtualizada : t)))
+      }
+    }
+
+    mostrarToast("Saída atualizada")
   }
 
   async function removerMateriaPrima(id) {
@@ -144,16 +203,29 @@ export function DashboardDataProvider({ children }) {
         )
       )
     }
+
+    mostrarToast("Saída removida")
   }
 
   // ---------- Transações ----------
-  async function adicionarTransacao(transacao) {
+  async function adicionarTransacao(transacao, opcoes = {}) {
     const { data, error } = await supabase.from("transacoes").insert(transacao).select().single()
     if (error) {
       alert("Erro ao adicionar transação: " + error.message)
       return
     }
     setTransacoes((prev) => [...prev, data])
+    if (!opcoes.semAviso) mostrarToast("Transação adicionada")
+  }
+
+  async function atualizarTransacao(id, mudancas) {
+    const { data, error } = await supabase.from("transacoes").update(mudancas).eq("id", id).select().single()
+    if (error) {
+      alert("Erro ao atualizar transação: " + error.message)
+      return
+    }
+    setTransacoes((prev) => prev.map((t) => (t.id === id ? data : t)))
+    mostrarToast("Transação atualizada")
   }
 
   async function removerTransacao(id) {
@@ -163,6 +235,7 @@ export function DashboardDataProvider({ children }) {
       return
     }
     setTransacoes((prev) => prev.filter((t) => t.id !== id))
+    mostrarToast("Transação removida")
   }
 
   // ---------- Contas a Receber ----------
@@ -175,13 +248,18 @@ export function DashboardDataProvider({ children }) {
     setContasReceber((prev) => [...prev, data])
 
     // Toda conta a receber já entra automaticamente como entrada nas transações/gráficos
-    await adicionarTransacao({
-      cliente: `Conta a receber: ${data.descricao}`,
-      valor: data.valor,
-      tipo: "entrada",
-      categoria: "Contas a Receber",
-      data: data.vencimento.slice(0, 7),
-    })
+    await adicionarTransacao(
+      {
+        cliente: `Conta a receber: ${data.descricao}`,
+        valor: data.valor,
+        tipo: "entrada",
+        categoria: "Contas a Receber",
+        data: data.vencimento.slice(0, 7),
+      },
+      { semAviso: true }
+    )
+
+    mostrarToast("Conta a receber adicionada")
   }
 
   async function marcarContaReceberComoRecebida(id) {
@@ -196,6 +274,7 @@ export function DashboardDataProvider({ children }) {
       return
     }
     setContasReceber((prev) => prev.map((c) => (c.id === id ? data : c)))
+    mostrarToast("Conta marcada como recebida")
   }
 
   async function reabrirContaReceber(id) {
@@ -210,6 +289,7 @@ export function DashboardDataProvider({ children }) {
       return
     }
     setContasReceber((prev) => prev.map((c) => (c.id === id ? data : c)))
+    mostrarToast("Conta reaberta")
   }
 
   async function removerContaReceber(id) {
@@ -237,6 +317,8 @@ export function DashboardDataProvider({ children }) {
         prev.filter((t) => !(t.tipo === "entrada" && t.cliente === cliente && t.valor === conta.valor && t.data === mes))
       )
     }
+
+    mostrarToast("Conta a receber removida")
   }
 
   // ---------- Contas a Pagar ----------
@@ -249,13 +331,18 @@ export function DashboardDataProvider({ children }) {
     setContasPagar((prev) => [...prev, data])
 
     // Toda conta a pagar já entra automaticamente como saída nas transações/gráficos
-    await adicionarTransacao({
-      cliente: `Conta a pagar: ${data.descricao}`,
-      valor: data.valor,
-      tipo: "saida",
-      categoria: "Contas a Pagar",
-      data: data.vencimento.slice(0, 7),
-    })
+    await adicionarTransacao(
+      {
+        cliente: `Conta a pagar: ${data.descricao}`,
+        valor: data.valor,
+        tipo: "saida",
+        categoria: "Contas a Pagar",
+        data: data.vencimento.slice(0, 7),
+      },
+      { semAviso: true }
+    )
+
+    mostrarToast("Conta a pagar adicionada")
   }
 
   async function marcarContaPagarComoPaga(id) {
@@ -270,6 +357,7 @@ export function DashboardDataProvider({ children }) {
       return
     }
     setContasPagar((prev) => prev.map((c) => (c.id === id ? data : c)))
+    mostrarToast("Conta marcada como paga")
   }
 
   async function reabrirContaPagar(id) {
@@ -284,6 +372,7 @@ export function DashboardDataProvider({ children }) {
       return
     }
     setContasPagar((prev) => prev.map((c) => (c.id === id ? data : c)))
+    mostrarToast("Conta reaberta")
   }
 
   async function removerContaPagar(id) {
@@ -311,6 +400,8 @@ export function DashboardDataProvider({ children }) {
         prev.filter((t) => !(t.tipo === "saida" && t.cliente === cliente && t.valor === conta.valor && t.data === mes))
       )
     }
+
+    mostrarToast("Conta a pagar removida")
   }
 
   // ---------- Limpar tudo ----------
@@ -407,10 +498,13 @@ export function DashboardDataProvider({ children }) {
     contasPagar,
     carregando,
     adicionarCliente,
+    atualizarCliente,
     removerCliente,
     adicionarMateriaPrima,
+    atualizarMateriaPrima,
     removerMateriaPrima,
     adicionarTransacao,
+    atualizarTransacao,
     removerTransacao,
     adicionarContaReceber,
     marcarContaReceberComoRecebida,

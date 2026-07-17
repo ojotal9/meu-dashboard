@@ -54,6 +54,26 @@ export function dataIsoParaBr(dataIso) {
   return `${dia}/${mes}/${ano}`
 }
 
+// Ordena uma lista por uma coluna (campo do objeto), em ordem crescente ou decrescente.
+// Funciona com texto e número, e coloca valores vazios sempre por último.
+export function ordenarLista(lista, coluna, direcao) {
+  if (!coluna) return lista
+  const copia = [...lista]
+  copia.sort((a, b) => {
+    const va = a[coluna]
+    const vb = b[coluna]
+    if (va == null || va === "") return 1
+    if (vb == null || vb === "") return -1
+    if (typeof va === "number" && typeof vb === "number") {
+      return direcao === "asc" ? va - vb : vb - va
+    }
+    return direcao === "asc"
+      ? String(va).localeCompare(String(vb), "pt-BR")
+      : String(vb).localeCompare(String(va), "pt-BR")
+  })
+  return copia
+}
+
 const NOMES_MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
   "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
