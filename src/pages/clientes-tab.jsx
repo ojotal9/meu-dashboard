@@ -136,7 +136,15 @@ export function ClientesTab() {
                   <Pencil />
                   Editar
                 </Button>
-                <Button variant="destructive" size="sm" onClick={() => removerCliente(cliente.id)}>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    if (confirm(`Remover o cliente "${cliente.nome}"? Essa ação não pode ser desfeita.`)) {
+                      removerCliente(cliente.id)
+                    }
+                  }}
+                >
                   Remover
                 </Button>
               </TableCell>

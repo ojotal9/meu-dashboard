@@ -246,7 +246,15 @@ export function TransacoesTab() {
                   <Pencil />
                   Editar
                 </Button>
-                <Button variant="destructive" size="sm" onClick={() => removerTransacao(t.id)}>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    if (confirm(`Remover essa transação de "${t.cliente}"? Essa ação não pode ser desfeita.`)) {
+                      removerTransacao(t.id)
+                    }
+                  }}
+                >
                   Remover
                 </Button>
               </TableCell>

@@ -219,7 +219,15 @@ export function ContasReceberTab() {
                         Recebido
                       </Button>
                     )}
-                    <Button variant="destructive" size="sm" onClick={() => removerContaReceber(conta.id)}>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        if (confirm(`Remover a conta "${conta.descricao}"? Essa ação não pode ser desfeita.`)) {
+                          removerContaReceber(conta.id)
+                        }
+                      }}
+                    >
                       Remover
                     </Button>
                   </TableCell>

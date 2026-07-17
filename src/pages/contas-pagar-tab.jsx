@@ -219,7 +219,15 @@ export function ContasPagarTab() {
                         Pago
                       </Button>
                     )}
-                    <Button variant="destructive" size="sm" onClick={() => removerContaPagar(conta.id)}>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        if (confirm(`Remover a conta "${conta.descricao}"? Essa ação não pode ser desfeita.`)) {
+                          removerContaPagar(conta.id)
+                        }
+                      }}
+                    >
                       Remover
                     </Button>
                   </TableCell>

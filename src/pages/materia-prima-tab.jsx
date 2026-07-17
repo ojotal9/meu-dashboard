@@ -193,7 +193,15 @@ export function MateriaPrimaTab() {
                   <Pencil />
                   Editar
                 </Button>
-                <Button variant="destructive" size="sm" onClick={() => removerMateriaPrima(item.id)}>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    if (confirm(`Remover essa saída de "${item.tipo}"? Essa ação não pode ser desfeita.`)) {
+                      removerMateriaPrima(item.id)
+                    }
+                  }}
+                >
                   Remover
                 </Button>
               </TableCell>

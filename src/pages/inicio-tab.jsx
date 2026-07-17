@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { AlertTriangle } from "lucide-react"
+import { AlertTriangle, TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -36,6 +36,38 @@ function formatarSaldo(valor) {
 
 const CORES = ["#0E6B58", "#9C3B33"]
 
+// Mostra a variação percentual em relação ao mês passado, com seta e cor.
+// "invertido" é usado pra Saída, onde subir é ruim (vermelho) e descer é bom (verde).
+function IndicadorVariacao({ percentual, invertido = false }) {
+  if (percentual === null) {
+    return <span className="text-xs text-muted-foreground">Sem dados do mês passado</span>
+  }
+  if (percentual === 0) {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+        <Minus className="h-3.5 w-3.5" />
+        Igual ao mês passado
+      </span>
+    )
+  }
+
+  const subiu = percentual > 0
+  const positivo = invertido ? !subiu : subiu
+  const Icone = subiu ? TrendingUp : TrendingDown
+
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-medium ${positivo ? "text-emerald-500" : "text-destructive"}`}>
+      <Icone className="h-3.5 w-3.5" />
+      {Math.abs(percentual).toFixed(0)}% vs mês passado
+    </span>
+  )
+}
+
+function calcularVariacao(atual, anterior) {
+  if (anterior === 0) return atual === 0 ? 0 : null
+  return ((atual - anterior) / Math.abs(anterior)) * 100
+}
+
 export function InicioTab({ onNavegar }) {
   const { clientes, transacoes, contasPagar, contasReceber } = useDashboardData()
   const { sessao, perfil, podeAcessar } = useAuth()
@@ -49,6 +81,27 @@ export function InicioTab({ onNavegar }) {
   const mostrarAlertaPagar = pagarAtrasadas.length > 0 && podeAcessar("contas-pagar")
   const mostrarAlertaReceber = receberAtrasadas.length > 0 && podeAcessar("contas-receber")
 
+  // ---------- Comparativo: mês atual x mês anterior (independe do filtro abaixo) ----------
+  const hoje = new Date()
+  const mesAtualChave = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`
+  const dataMesAnterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1)
+  const mesAnteriorChave = `${dataMesAnterior.getFullYear()}-${String(dataMesAnterior.getMonth() + 1).padStart(2, "0")}`
+
+  function totaisDoMes(chave) {
+    const doMes = transacoes.filter((t) => t.data === chave)
+    const entrada = doMes.filter((t) => t.tipo === "entrada").reduce((soma, t) => soma + t.valor, 0)
+    const saida = doMes.filter((t) => t.tipo === "saida").reduce((soma, t) => soma + t.valor, 0)
+    return { entrada, saida, saldo: entrada - saida }
+  }
+
+  const totalMesAtual = totaisDoMes(mesAtualChave)
+  const totalMesAnterior = totaisDoMes(mesAnteriorChave)
+
+  const variacaoEntrada = calcularVariacao(totalMesAtual.entrada, totalMesAnterior.entrada)
+  const variacaoSaida = calcularVariacao(totalMesAtual.saida, totalMesAnterior.saida)
+  const variacaoSaldo = calcularVariacao(totalMesAtual.saldo, totalMesAnterior.saldo)
+
+  // ---------- Resumo financeiro filtrável por mês ----------
   // Descobre quais meses existem nas transações, pra popular o seletor
   const mesesDisponiveis = Array.from(
     new Set(
@@ -138,6 +191,51 @@ export function InicioTab({ onNavegar }) {
           </CardHeader>
           <CardContent>
             <div className="font-mono text-3xl font-medium tabular-nums">{transacoes.length}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <h2 className="text-lg font-semibold">Este mês x mês passado</h2>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+              Entrada este mês
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-1">
+            <div className="font-mono text-2xl font-medium tabular-nums">{formatarReais(totalMesAtual.entrada)}</div>
+            <IndicadorVariacao percentual={variacaoEntrada} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+              Saída este mês
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-1">
+            <div className="font-mono text-2xl font-medium tabular-nums">{formatarReais(totalMesAtual.saida)}</div>
+            <IndicadorVariacao percentual={variacaoSaida} invertido />
+          </CardContent>
+        </Card>
+
+        <Card
+          className="border-l-4"
+          style={{ borderLeftColor: totalMesAtual.saldo >= 0 ? "var(--color-chart-1)" : "var(--color-chart-2)" }}
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+              Saldo este mês
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-1">
+            <div className={`font-mono text-2xl font-medium tabular-nums ${totalMesAtual.saldo < 0 ? "text-destructive" : ""}`}>
+              {formatarSaldo(totalMesAtual.saldo)}
+            </div>
+            <IndicadorVariacao percentual={variacaoSaldo} />
           </CardContent>
         </Card>
       </div>
