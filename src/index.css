@@ -154,3 +154,68 @@
     animation: none;
   }
 }
+
+/* Em telas estreitas, tabelas viram uma lista de cartões (uma linha = um cartão),
+   com o nome da coluna aparecendo como rótulo ao lado do valor */
+@media (max-width: 640px) {
+  .tabela-responsiva table,
+  .tabela-responsiva thead,
+  .tabela-responsiva tbody,
+  .tabela-responsiva tr,
+  .tabela-responsiva th,
+  .tabela-responsiva td {
+    display: block;
+  }
+
+  .tabela-responsiva thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .tabela-responsiva tbody tr {
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 0.25rem 0.75rem;
+  }
+
+  .tabela-responsiva tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .tabela-responsiva td {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 0.45rem 0 !important;
+    border: none !important;
+    white-space: normal !important;
+    text-align: right;
+  }
+
+  .tabela-responsiva td:not(:last-child) {
+    border-bottom: 1px solid var(--border) !important;
+  }
+
+  .tabela-responsiva td[data-label]::before {
+    content: attr(data-label);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+    text-align: left;
+    margin-right: auto;
+  }
+
+  .tabela-responsiva td.celula-vazia {
+    display: block;
+    text-align: center;
+    padding: 0.75rem 0 !important;
+  }
+}

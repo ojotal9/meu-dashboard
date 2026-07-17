@@ -43,9 +43,9 @@ export function ResumoClienteTab() {
       <TableBody>
         {resumos.map((r) => (
           <TableRow key={r.nome}>
-            <TableCell className="font-medium">{r.nome}</TableCell>
-            <TableCell>{formatarReais(r.totalEntrada)}</TableCell>
-            <TableCell>{formatarReais(r.totalSaida)}</TableCell>
+            <TableCell className="font-medium" data-label="Cliente">{r.nome}</TableCell>
+            <TableCell data-label="Total recebido">{formatarReais(r.totalEntrada)}</TableCell>
+            <TableCell data-label="Total pago a ele">{formatarReais(r.totalSaida)}</TableCell>
           </TableRow>
         ))}
       </TableBody>

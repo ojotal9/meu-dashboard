@@ -78,12 +78,12 @@ export function ClientesTab() {
         <TableBody>
           {clientesFiltrados.map((cliente) => (
             <TableRow key={cliente.id}>
-              <TableCell className="font-medium">{cliente.nome}</TableCell>
-              <TableCell>{cliente.telefone}</TableCell>
-              <TableCell>{cliente.email}</TableCell>
-              <TableCell>{cliente.cpf}</TableCell>
-              <TableCell>{cliente.representante}</TableCell>
-              <TableCell>
+              <TableCell className="font-medium" data-label="Nome">{cliente.nome}</TableCell>
+              <TableCell data-label="Telefone">{cliente.telefone}</TableCell>
+              <TableCell data-label="E-mail">{cliente.email}</TableCell>
+              <TableCell data-label="CPF">{cliente.cpf}</TableCell>
+              <TableCell data-label="Representante">{cliente.representante}</TableCell>
+              <TableCell data-label="Ações">
                 <Button variant="destructive" size="sm" onClick={() => removerCliente(cliente.id)}>
                   Remover
                 </Button>
@@ -92,7 +92,7 @@ export function ClientesTab() {
           ))}
           {clientesFiltrados.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground">
+              <TableCell colSpan={6} className="celula-vazia text-center text-muted-foreground">
                 Nenhum cliente encontrado
               </TableCell>
             </TableRow>

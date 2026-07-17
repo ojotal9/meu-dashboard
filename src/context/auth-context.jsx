@@ -7,6 +7,7 @@ export function AuthProvider({ children }) {
   const [sessao, setSessao] = useState(null)
   const [perfil, setPerfil] = useState(null)
   const [carregando, setCarregando] = useState(true)
+  const [todosPerfis, setTodosPerfis] = useState([])
 
   async function carregarPerfil(userId) {
     const { data } = await supabase.from("perfis").select("*").eq("id", userId).single()
@@ -52,7 +53,49 @@ export function AuthProvider({ children }) {
     return perfil?.paginas_permitidas?.includes(chaveDaPagina) ?? false
   }
 
-  const valor = { sessao, perfil, carregando, entrar, sair, ehAdmin, podeAcessar }
+  // ---------- Gestão de usuários (perfis) — só admins conseguem, a política do banco garante isso ----------
+  async function carregarTodosPerfis() {
+    const { data, error } = await supabase.from("perfis").select("*").order("nome")
+    if (!error) setTodosPerfis(data)
+    return { data, error }
+  }
+
+  async function criarPerfil(novoPerfil) {
+    const { data, error } = await supabase.from("perfis").insert(novoPerfil).select().single()
+    if (!error) setTodosPerfis((prev) => [...prev, data].sort((a, b) => (a.nome || "").localeCompare(b.nome || "")))
+    return { data, error }
+  }
+
+  async function atualizarPerfil(id, mudancas) {
+    const { data, error } = await supabase.from("perfis").update(mudancas).eq("id", id).select().single()
+    if (!error) {
+      setTodosPerfis((prev) => prev.map((p) => (p.id === id ? data : p)))
+      // Se a pessoa editou o próprio perfil, atualiza também o que está em uso agora
+      if (perfil?.id === id) setPerfil(data)
+    }
+    return { data, error }
+  }
+
+  async function removerPerfil(id) {
+    const { error } = await supabase.from("perfis").delete().eq("id", id)
+    if (!error) setTodosPerfis((prev) => prev.filter((p) => p.id !== id))
+    return { error }
+  }
+
+  const valor = {
+    sessao,
+    perfil,
+    carregando,
+    entrar,
+    sair,
+    ehAdmin,
+    podeAcessar,
+    todosPerfis,
+    carregarTodosPerfis,
+    criarPerfil,
+    atualizarPerfil,
+    removerPerfil,
+  }
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>
 }

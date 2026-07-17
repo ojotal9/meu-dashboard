@@ -163,12 +163,12 @@ export function TransacoesTab() {
         <TableBody>
           {transacoesFiltradas.map((t) => (
             <TableRow key={t.id}>
-              <TableCell className="font-medium">{t.cliente}</TableCell>
-              <TableCell>{formatarReais(t.valor)}</TableCell>
-              <TableCell>{t.tipo}</TableCell>
-              <TableCell>{t.categoria || "—"}</TableCell>
-              <TableCell>{formatarMesAnoBR(t.data)}</TableCell>
-              <TableCell>
+              <TableCell className="font-medium" data-label="Cliente">{t.cliente}</TableCell>
+              <TableCell data-label="Valor">{formatarReais(t.valor)}</TableCell>
+              <TableCell data-label="Tipo">{t.tipo}</TableCell>
+              <TableCell data-label="Categoria">{t.categoria || "—"}</TableCell>
+              <TableCell data-label="Data">{formatarMesAnoBR(t.data)}</TableCell>
+              <TableCell data-label="Ações">
                 <Button variant="destructive" size="sm" onClick={() => removerTransacao(t.id)}>
                   Remover
                 </Button>
@@ -177,7 +177,7 @@ export function TransacoesTab() {
           ))}
           {transacoesFiltradas.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} className="text-center text-muted-foreground">
+              <TableCell colSpan={6} className="celula-vazia text-center text-muted-foreground">
                 Nenhuma transação encontrada
               </TableCell>
             </TableRow>

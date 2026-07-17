@@ -123,11 +123,11 @@ export function MateriaPrimaTab() {
         <TableBody>
           {itensFiltrados.map((item) => (
             <TableRow key={item.id}>
-              <TableCell className="font-medium">{item.tipo}</TableCell>
-              <TableCell>{formatarReais(item.valor)}</TableCell>
-              <TableCell>{formatarDataBR(item.data)}</TableCell>
-              <TableCell>{item.observacao}</TableCell>
-              <TableCell>
+              <TableCell className="font-medium" data-label="Tipo">{item.tipo}</TableCell>
+              <TableCell data-label="Valor">{formatarReais(item.valor)}</TableCell>
+              <TableCell data-label="Data">{formatarDataBR(item.data)}</TableCell>
+              <TableCell data-label="Observação">{item.observacao}</TableCell>
+              <TableCell data-label="Ações">
                 <Button variant="destructive" size="sm" onClick={() => removerMateriaPrima(item.id)}>
                   Remover
                 </Button>
@@ -136,7 +136,7 @@ export function MateriaPrimaTab() {
           ))}
           {itensFiltrados.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">
+              <TableCell colSpan={5} className="celula-vazia text-center text-muted-foreground">
                 Nenhum item encontrado
               </TableCell>
             </TableRow>

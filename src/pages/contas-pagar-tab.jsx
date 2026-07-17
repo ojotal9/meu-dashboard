@@ -198,16 +198,16 @@ export function ContasPagarTab() {
             <TableBody>
               {contasComStatus.map((conta) => (
                 <TableRow key={conta.id}>
-                  <TableCell className="font-medium">{conta.descricao}</TableCell>
-                  <TableCell>{conta.fornecedor}</TableCell>
-                  <TableCell>{formatarDataBR(conta.vencimento)}</TableCell>
-                  <TableCell>{formatarReais(conta.valor)}</TableCell>
-                  <TableCell>
+                  <TableCell className="font-medium" data-label="Descrição">{conta.descricao}</TableCell>
+                  <TableCell data-label="Fornecedor">{conta.fornecedor}</TableCell>
+                  <TableCell data-label="Vencimento">{formatarDataBR(conta.vencimento)}</TableCell>
+                  <TableCell data-label="Valor">{formatarReais(conta.valor)}</TableCell>
+                  <TableCell data-label="Status">
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${ESTILO_STATUS[conta.statusReal]}`}>
                       {ROTULO_STATUS[conta.statusReal]}
                     </span>
                   </TableCell>
-                  <TableCell className="flex gap-2">
+                  <TableCell className="flex gap-2" data-label="Ações">
                     {conta.status === "pago" ? (
                       <Button variant="outline" size="sm" onClick={() => reabrirContaPagar(conta.id)}>
                         <RotateCcw />

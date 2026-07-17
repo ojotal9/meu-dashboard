@@ -117,10 +117,10 @@ export function HistoricoMensalTab() {
             const resultado = m.entrada - m.saida
             return (
               <TableRow key={m.chave}>
-                <TableCell className="font-medium">{formatarMesAnoBR(m.chave)}</TableCell>
-                <TableCell>{formatarReais(m.entrada)}</TableCell>
-                <TableCell>{formatarReais(m.saida)}</TableCell>
-                <TableCell>
+                <TableCell className="font-medium" data-label="Mês">{formatarMesAnoBR(m.chave)}</TableCell>
+                <TableCell data-label="Entradas">{formatarReais(m.entrada)}</TableCell>
+                <TableCell data-label="Saídas">{formatarReais(m.saida)}</TableCell>
+                <TableCell data-label="Lucro/Prejuízo">
                   {resultado < 0 ? "- " : ""}
                   {formatarReais(Math.abs(resultado))}
                 </TableCell>
