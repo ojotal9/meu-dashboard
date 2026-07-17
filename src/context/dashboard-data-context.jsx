@@ -16,35 +16,55 @@ export function DashboardDataProvider({ children }) {
   const [contasPagar, setContasPagar] = useState([])
   const [carregando, setCarregando] = useState(true)
 
-  async function carregarTudo() {
-    const [resClientes, resMateriaPrimas, resTransacoes, resContasReceber, resContasPagar] =
-      await Promise.all([
-        supabase.from("clientes").select("*").order("created_at"),
-        supabase.from("materia_primas").select("*").order("created_at"),
-        supabase.from("transacoes").select("*").order("created_at"),
-        supabase.from("contas_receber").select("*").order("vencimento"),
-        supabase.from("contas_pagar").select("*").order("vencimento"),
-      ])
+  // ---------- Busca de uma tabela por vez (usado no tempo real e após ações em lote) ----------
+  async function carregarClientes() {
+    const { data, error } = await supabase.from("clientes").select("*").order("created_at")
+    if (!error) setClientes(data)
+  }
 
-    if (!resClientes.error) setClientes(resClientes.data)
-    if (!resMateriaPrimas.error) setMateriaPrimas(resMateriaPrimas.data)
-    if (!resTransacoes.error) setTransacoes(resTransacoes.data)
-    if (!resContasReceber.error) setContasReceber(resContasReceber.data)
-    if (!resContasPagar.error) setContasPagar(resContasPagar.data)
+  async function carregarMateriaPrimas() {
+    const { data, error } = await supabase.from("materia_primas").select("*").order("created_at")
+    if (!error) setMateriaPrimas(data)
+  }
+
+  async function carregarTransacoes() {
+    const { data, error } = await supabase.from("transacoes").select("*").order("created_at")
+    if (!error) setTransacoes(data)
+  }
+
+  async function carregarContasReceber() {
+    const { data, error } = await supabase.from("contas_receber").select("*").order("vencimento")
+    if (!error) setContasReceber(data)
+  }
+
+  async function carregarContasPagar() {
+    const { data, error } = await supabase.from("contas_pagar").select("*").order("vencimento")
+    if (!error) setContasPagar(data)
+  }
+
+  async function carregarTudo() {
+    await Promise.all([
+      carregarClientes(),
+      carregarMateriaPrimas(),
+      carregarTransacoes(),
+      carregarContasReceber(),
+      carregarContasPagar(),
+    ])
     setCarregando(false)
   }
 
   useEffect(() => {
     carregarTudo()
 
-    // Escuta mudanças feitas por qualquer pessoa e atualiza a tela na hora
+    // Escuta mudanças feitas por OUTRAS pessoas e atualiza só a tabela que mudou
+    // (as próprias ações da pessoa já atualizam a tela na hora, sem esperar isso aqui)
     const canal = supabase
       .channel("dashboard-mudancas")
-      .on("postgres_changes", { event: "*", schema: "public", table: "clientes" }, carregarTudo)
-      .on("postgres_changes", { event: "*", schema: "public", table: "materia_primas" }, carregarTudo)
-      .on("postgres_changes", { event: "*", schema: "public", table: "transacoes" }, carregarTudo)
-      .on("postgres_changes", { event: "*", schema: "public", table: "contas_receber" }, carregarTudo)
-      .on("postgres_changes", { event: "*", schema: "public", table: "contas_pagar" }, carregarTudo)
+      .on("postgres_changes", { event: "*", schema: "public", table: "clientes" }, carregarClientes)
+      .on("postgres_changes", { event: "*", schema: "public", table: "materia_primas" }, carregarMateriaPrimas)
+      .on("postgres_changes", { event: "*", schema: "public", table: "transacoes" }, carregarTransacoes)
+      .on("postgres_changes", { event: "*", schema: "public", table: "contas_receber" }, carregarContasReceber)
+      .on("postgres_changes", { event: "*", schema: "public", table: "contas_pagar" }, carregarContasPagar)
       .subscribe()
 
     return () => {
@@ -54,13 +74,21 @@ export function DashboardDataProvider({ children }) {
 
   // ---------- Clientes ----------
   async function adicionarCliente(cliente) {
-    const { error } = await supabase.from("clientes").insert(cliente)
-    if (error) alert("Erro ao adicionar cliente: " + error.message)
+    const { data, error } = await supabase.from("clientes").insert(cliente).select().single()
+    if (error) {
+      alert("Erro ao adicionar cliente: " + error.message)
+      return
+    }
+    setClientes((prev) => [...prev, data])
   }
 
   async function removerCliente(id) {
     const { error } = await supabase.from("clientes").delete().eq("id", id)
-    if (error) alert("Erro ao remover cliente: " + error.message)
+    if (error) {
+      alert("Erro ao remover cliente: " + error.message)
+      return
+    }
+    setClientes((prev) => prev.filter((c) => c.id !== id))
   }
 
   // ---------- Matéria-prima ----------
@@ -75,6 +103,8 @@ export function DashboardDataProvider({ children }) {
       alert("Erro ao adicionar matéria-prima: " + error.message)
       return
     }
+
+    setMateriaPrimas((prev) => [...prev, data])
 
     // Toda compra de matéria-prima também vira uma "saída" automática nas transações
     await adicionarTransacao({
@@ -95,75 +125,146 @@ export function DashboardDataProvider({ children }) {
       return
     }
 
+    setMateriaPrimas((prev) => prev.filter((m) => m.id !== id))
+
     // Remove também a saída correspondente das transações
     if (item) {
+      const cliente = `Matéria-prima: ${item.tipo}`
       await supabase
         .from("transacoes")
         .delete()
         .eq("tipo", "saida")
-        .eq("cliente", `Matéria-prima: ${item.tipo}`)
+        .eq("cliente", cliente)
         .eq("valor", item.valor)
         .eq("data", item.data)
+
+      setTransacoes((prev) =>
+        prev.filter(
+          (t) => !(t.tipo === "saida" && t.cliente === cliente && t.valor === item.valor && t.data === item.data)
+        )
+      )
     }
   }
 
   // ---------- Transações ----------
   async function adicionarTransacao(transacao) {
-    const { error } = await supabase.from("transacoes").insert(transacao)
-    if (error) alert("Erro ao adicionar transação: " + error.message)
+    const { data, error } = await supabase.from("transacoes").insert(transacao).select().single()
+    if (error) {
+      alert("Erro ao adicionar transação: " + error.message)
+      return
+    }
+    setTransacoes((prev) => [...prev, data])
   }
 
   async function removerTransacao(id) {
     const { error } = await supabase.from("transacoes").delete().eq("id", id)
-    if (error) alert("Erro ao remover transação: " + error.message)
+    if (error) {
+      alert("Erro ao remover transação: " + error.message)
+      return
+    }
+    setTransacoes((prev) => prev.filter((t) => t.id !== id))
   }
 
   // ---------- Contas a Receber ----------
   async function adicionarContaReceber(conta) {
-    const { error } = await supabase.from("contas_receber").insert(conta)
-    if (error) alert("Erro ao adicionar conta a receber: " + error.message)
+    const { data, error } = await supabase.from("contas_receber").insert(conta).select().single()
+    if (error) {
+      alert("Erro ao adicionar conta a receber: " + error.message)
+      return
+    }
+    setContasReceber((prev) => [...prev, data])
   }
 
   async function marcarContaReceberComoRecebida(id) {
-    const { error } = await supabase.from("contas_receber").update({ status: "recebido" }).eq("id", id)
-    if (error) alert("Erro ao atualizar conta: " + error.message)
+    const { data, error } = await supabase
+      .from("contas_receber")
+      .update({ status: "recebido" })
+      .eq("id", id)
+      .select()
+      .single()
+    if (error) {
+      alert("Erro ao atualizar conta: " + error.message)
+      return
+    }
+    setContasReceber((prev) => prev.map((c) => (c.id === id ? data : c)))
   }
 
   async function reabrirContaReceber(id) {
-    const { error } = await supabase.from("contas_receber").update({ status: "pendente" }).eq("id", id)
-    if (error) alert("Erro ao atualizar conta: " + error.message)
+    const { data, error } = await supabase
+      .from("contas_receber")
+      .update({ status: "pendente" })
+      .eq("id", id)
+      .select()
+      .single()
+    if (error) {
+      alert("Erro ao atualizar conta: " + error.message)
+      return
+    }
+    setContasReceber((prev) => prev.map((c) => (c.id === id ? data : c)))
   }
 
   async function removerContaReceber(id) {
     const { error } = await supabase.from("contas_receber").delete().eq("id", id)
-    if (error) alert("Erro ao remover conta: " + error.message)
+    if (error) {
+      alert("Erro ao remover conta: " + error.message)
+      return
+    }
+    setContasReceber((prev) => prev.filter((c) => c.id !== id))
   }
 
   // ---------- Contas a Pagar ----------
   async function adicionarContaPagar(conta) {
-    const { error } = await supabase.from("contas_pagar").insert(conta)
-    if (error) alert("Erro ao adicionar conta a pagar: " + error.message)
+    const { data, error } = await supabase.from("contas_pagar").insert(conta).select().single()
+    if (error) {
+      alert("Erro ao adicionar conta a pagar: " + error.message)
+      return
+    }
+    setContasPagar((prev) => [...prev, data])
   }
 
   async function marcarContaPagarComoPaga(id) {
-    const { error } = await supabase.from("contas_pagar").update({ status: "pago" }).eq("id", id)
-    if (error) alert("Erro ao atualizar conta: " + error.message)
+    const { data, error } = await supabase
+      .from("contas_pagar")
+      .update({ status: "pago" })
+      .eq("id", id)
+      .select()
+      .single()
+    if (error) {
+      alert("Erro ao atualizar conta: " + error.message)
+      return
+    }
+    setContasPagar((prev) => prev.map((c) => (c.id === id ? data : c)))
   }
 
   async function reabrirContaPagar(id) {
-    const { error } = await supabase.from("contas_pagar").update({ status: "pendente" }).eq("id", id)
-    if (error) alert("Erro ao atualizar conta: " + error.message)
+    const { data, error } = await supabase
+      .from("contas_pagar")
+      .update({ status: "pendente" })
+      .eq("id", id)
+      .select()
+      .single()
+    if (error) {
+      alert("Erro ao atualizar conta: " + error.message)
+      return
+    }
+    setContasPagar((prev) => prev.map((c) => (c.id === id ? data : c)))
   }
 
   async function removerContaPagar(id) {
     const { error } = await supabase.from("contas_pagar").delete().eq("id", id)
-    if (error) alert("Erro ao remover conta: " + error.message)
+    if (error) {
+      alert("Erro ao remover conta: " + error.message)
+      return
+    }
+    setContasPagar((prev) => prev.filter((c) => c.id !== id))
   }
 
   // ---------- Limpar tudo ----------
   async function limparDados() {
     await supabase.from("transacoes").delete().neq("id", "00000000-0000-0000-0000-000000000000")
     await supabase.from("materia_primas").delete().neq("id", "00000000-0000-0000-0000-000000000000")
+    await carregarTransacoes()
+    await carregarMateriaPrimas()
   }
 
   // ---------- Backup (exportar / importar) ----------
