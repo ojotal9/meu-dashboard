@@ -195,7 +195,7 @@ export function InicioTab({ onNavegar }) {
         </Card>
       </div>
 
-      <h2 className="text-lg font-semibold">Este mês x mês passado</h2>
+      <h2 className="text-lg font-semibold">Comparativo Mensal</h2>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
