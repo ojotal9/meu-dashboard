@@ -5,6 +5,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import {
   Table,
   TableHeader,
   TableBody,
@@ -13,6 +21,7 @@ import {
   TableCell,
 } from "@/components/ui/table"
 import { useDashboardData } from "@/context/dashboard-data-context"
+import { useConfirm } from "@/context/confirm-context"
 import { formatarDataBR, mascararDataDigitada, dataBrParaIso } from "@/lib/utils"
 
 function formatarReais(valor) {
@@ -44,8 +53,9 @@ const ROTULO_STATUS = {
 export function ContasPagarTab() {
   const { contasPagar, adicionarContaPagar, marcarContaPagarComoPaga, reabrirContaPagar, removerContaPagar } =
     useDashboardData()
+  const confirmar = useConfirm()
 
-  const [mostrarFormulario, setMostrarFormulario] = useState(false)
+  const [dialogoAberto, setDialogoAberto] = useState(false)
   const [descricao, setDescricao] = useState("")
   const [fornecedor, setFornecedor] = useState("")
   const [vencimentoTexto, setVencimentoTexto] = useState("")
@@ -61,7 +71,7 @@ export function ContasPagarTab() {
     setFornecedor("")
     setVencimentoTexto("")
     setValor("")
-    setMostrarFormulario(false)
+    setDialogoAberto(false)
   }
 
   function handleSalvar() {
@@ -94,55 +104,11 @@ export function ContasPagarTab() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <p className="text-muted-foreground">Gerencie suas despesas e pagamentos</p>
-        <Button onClick={() => setMostrarFormulario((v) => !v)}>
+        <Button onClick={() => setDialogoAberto(true)}>
           <Plus />
           Nova Conta
         </Button>
       </div>
-
-      {mostrarFormulario && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Nova conta a pagar</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap items-end gap-2">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="descricao-pagar">Descrição</Label>
-              <Input id="descricao-pagar" value={descricao} onChange={(e) => setDescricao(e.target.value)} className="w-[200px]" />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="fornecedor-pagar">Fornecedor</Label>
-              <Input id="fornecedor-pagar" value={fornecedor} onChange={(e) => setFornecedor(e.target.value)} className="w-[180px]" />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="vencimento-pagar">Vencimento</Label>
-              <Input
-                id="vencimento-pagar"
-                placeholder="dd/mm/aaaa"
-                value={vencimentoTexto}
-                onChange={(e) => setVencimentoTexto(mascararDataDigitada(e.target.value))}
-                inputMode="numeric"
-                maxLength={10}
-                className="w-[140px]"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="valor-pagar">Valor</Label>
-              <Input
-                id="valor-pagar"
-                placeholder="ex: 150.00"
-                value={valor}
-                onChange={(e) => setValor(e.target.value)}
-                className="w-[140px]"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleSalvar}>Salvar</Button>
-              <Button variant="outline" onClick={limparFormulario}>Cancelar</Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="border-l-4 border-l-amber-500">
@@ -222,8 +188,8 @@ export function ContasPagarTab() {
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => {
-                        if (confirm(`Remover a conta "${conta.descricao}"? Essa ação não pode ser desfeita.`)) {
+                      onClick={async () => {
+                        if (await confirmar({ titulo: `Remover a conta "${conta.descricao}"?` })) {
                           removerContaPagar(conta.id)
                         }
                       }}
@@ -237,6 +203,49 @@ export function ContasPagarTab() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={dialogoAberto} onOpenChange={(aberto) => (aberto ? setDialogoAberto(true) : limparFormulario())}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova conta a pagar</DialogTitle>
+            <DialogDescription>Preencha os dados abaixo e salve.</DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="descricao-pagar">Descrição</Label>
+              <Input id="descricao-pagar" value={descricao} onChange={(e) => setDescricao(e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="fornecedor-pagar">Fornecedor</Label>
+              <Input id="fornecedor-pagar" value={fornecedor} onChange={(e) => setFornecedor(e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="vencimento-pagar">Vencimento</Label>
+              <Input
+                id="vencimento-pagar"
+                placeholder="dd/mm/aaaa"
+                value={vencimentoTexto}
+                onChange={(e) => setVencimentoTexto(mascararDataDigitada(e.target.value))}
+                inputMode="numeric"
+                maxLength={10}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="valor-pagar">Valor</Label>
+              <Input
+                id="valor-pagar"
+                placeholder="ex: 150.00"
+                value={valor}
+                onChange={(e) => setValor(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={limparFormulario}>Cancelar</Button>
+            <Button onClick={handleSalvar}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

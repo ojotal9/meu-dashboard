@@ -29,6 +29,7 @@ import {
 import { CampoBusca } from "@/components/campo-busca"
 import { CabecalhoOrdenavel } from "@/components/cabecalho-ordenavel"
 import { useDashboardData } from "@/context/dashboard-data-context"
+import { useConfirm } from "@/context/confirm-context"
 import { formatarMesAnoBR, ordenarLista } from "@/lib/utils"
 
 const MESES = [
@@ -52,6 +53,7 @@ function formatarReais(valor) {
 
 export function TransacoesTab() {
   const { clientes, transacoes, adicionarTransacao, atualizarTransacao, removerTransacao } = useDashboardData()
+  const confirmar = useConfirm()
 
   const anoAtual = new Date().getFullYear()
   const mesAtual = MESES[new Date().getMonth()]
@@ -249,8 +251,8 @@ export function TransacoesTab() {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => {
-                    if (confirm(`Remover essa transação de "${t.cliente}"? Essa ação não pode ser desfeita.`)) {
+                  onClick={async () => {
+                    if (await confirmar({ titulo: `Remover essa transação de "${t.cliente}"?` })) {
                       removerTransacao(t.id)
                     }
                   }}

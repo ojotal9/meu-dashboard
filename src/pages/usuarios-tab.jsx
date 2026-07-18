@@ -20,6 +20,7 @@ import {
   TableCell,
 } from "@/components/ui/table"
 import { useAuth } from "@/context/auth-context"
+import { useConfirm } from "@/context/confirm-context"
 
 const PAGINAS_DISPONIVEIS = [
   { chave: "inicio", titulo: "Início" },
@@ -48,6 +49,7 @@ export function UsuariosTab() {
     criarUsuarioCompleto,
     removerUsuarioCompleto,
   } = useAuth()
+  const confirmar = useConfirm()
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [editandoId, setEditandoId] = useState(null)
@@ -136,7 +138,11 @@ export function UsuariosTab() {
       alert("Você não pode remover o próprio acesso por aqui.")
       return
     }
-    if (!confirm("Remover essa pessoa? Isso apaga o login dela por completo, não dá pra desfazer.")) return
+    const confirmado = await confirmar({
+      titulo: "Remover essa pessoa?",
+      descricao: "Isso apaga o login dela por completo, não dá pra desfazer.",
+    })
+    if (!confirmado) return
 
     const { error } = await removerUsuarioCompleto(id)
     if (error) alert("Erro ao remover: " + error.message)

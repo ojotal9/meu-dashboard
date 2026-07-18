@@ -22,12 +22,14 @@ import {
 import { CampoBusca } from "@/components/campo-busca"
 import { CabecalhoOrdenavel } from "@/components/cabecalho-ordenavel"
 import { useDashboardData } from "@/context/dashboard-data-context"
+import { useConfirm } from "@/context/confirm-context"
 import { ordenarLista } from "@/lib/utils"
 
 const FORMULARIO_VAZIO = { nome: "", telefone: "", email: "", cpf: "", representante: "" }
 
 export function ClientesTab() {
   const { clientes, adicionarCliente, atualizarCliente, removerCliente } = useDashboardData()
+  const confirmar = useConfirm()
 
   const [novoCliente, setNovoCliente] = useState(FORMULARIO_VAZIO)
   const [busca, setBusca] = useState("")
@@ -139,8 +141,8 @@ export function ClientesTab() {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => {
-                    if (confirm(`Remover o cliente "${cliente.nome}"? Essa ação não pode ser desfeita.`)) {
+                  onClick={async () => {
+                    if (await confirmar({ titulo: `Remover o cliente "${cliente.nome}"?` })) {
                       removerCliente(cliente.id)
                     }
                   }}

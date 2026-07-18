@@ -29,6 +29,7 @@ import {
 import { CampoBusca } from "@/components/campo-busca"
 import { CabecalhoOrdenavel } from "@/components/cabecalho-ordenavel"
 import { useDashboardData } from "@/context/dashboard-data-context"
+import { useConfirm } from "@/context/confirm-context"
 import { formatarDataBR, mascararDataDigitada, dataBrParaIso, dataIsoParaBr, ordenarLista } from "@/lib/utils"
 
 const TIPOS = ["Tinta", "Fitilho", "Matriz", "Clichê", "Outros"]
@@ -39,6 +40,7 @@ function hoje() {
 
 export function MateriaPrimaTab() {
   const { materiaPrimas, adicionarMateriaPrima, atualizarMateriaPrima, removerMateriaPrima } = useDashboardData()
+  const confirmar = useConfirm()
 
   const [tipo, setTipo] = useState("Tinta")
   const [valor, setValor] = useState("")
@@ -196,8 +198,8 @@ export function MateriaPrimaTab() {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => {
-                    if (confirm(`Remover essa saída de "${item.tipo}"? Essa ação não pode ser desfeita.`)) {
+                  onClick={async () => {
+                    if (await confirmar({ titulo: `Remover essa saída de "${item.tipo}"?` })) {
                       removerMateriaPrima(item.id)
                     }
                   }}
