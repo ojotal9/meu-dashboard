@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { LogOut, Pencil, Trash2, UserPlus, X } from "lucide-react"
+import { LogOut, Pencil, Trash2, UserPlus, X, Circle } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/table"
 import { useAuth } from "@/context/auth-context"
 import { useConfirm } from "@/context/confirm-context"
+import { useToast } from "@/context/toast-context"
+import { usePresence } from "@/context/presence-context"
 
 const PAGINAS_DISPONIVEIS = [
   { chave: "inicio", titulo: "Início" },
@@ -50,6 +52,8 @@ export function UsuariosTab() {
     removerUsuarioCompleto,
   } = useAuth()
   const confirmar = useConfirm()
+  const { mostrarToast } = useToast()
+  const { usuariosOnline } = usePresence()
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [editandoId, setEditandoId] = useState(null)
@@ -89,7 +93,7 @@ export function UsuariosTab() {
 
   async function handleSalvar() {
     if (!formulario.nome.trim()) {
-      alert("Digite o nome da pessoa")
+      mostrarToast("Digite o nome da pessoa", "erro")
       return
     }
 
@@ -106,12 +110,12 @@ export function UsuariosTab() {
     } else {
       if (!formulario.email.trim() || !formulario.senha.trim()) {
         setSalvando(false)
-        alert("Preencha e-mail e senha pra criar o login")
+        mostrarToast("Preencha e-mail e senha pra criar o login", "erro")
         return
       }
       if (formulario.senha.trim().length < 6) {
         setSalvando(false)
-        alert("A senha precisa ter pelo menos 6 caracteres")
+        mostrarToast("A senha precisa ter pelo menos 6 caracteres", "erro")
         return
       }
       resultado = await criarUsuarioCompleto({
@@ -126,7 +130,7 @@ export function UsuariosTab() {
     setSalvando(false)
 
     if (resultado.error) {
-      alert("Erro ao salvar: " + resultado.error.message)
+      mostrarToast("Erro ao salvar: " + resultado.error.message, "erro")
       return
     }
 
@@ -135,7 +139,7 @@ export function UsuariosTab() {
 
   async function handleRemover(id) {
     if (id === sessao?.user?.id) {
-      alert("Você não pode remover o próprio acesso por aqui.")
+      mostrarToast("Você não pode remover o próprio acesso por aqui.", "erro")
       return
     }
     const confirmado = await confirmar({
@@ -145,7 +149,7 @@ export function UsuariosTab() {
     if (!confirmado) return
 
     const { error } = await removerUsuarioCompleto(id)
-    if (error) alert("Erro ao remover: " + error.message)
+    if (error) mostrarToast("Erro ao remover: " + error.message, "erro")
   }
 
   if (!ehAdmin) {
@@ -189,6 +193,31 @@ export function UsuariosTab() {
           )}
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Online agora</CardTitle>
+          <CardDescription>Atualiza em tempo real</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {usuariosOnline.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Ninguém online no momento.</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {usuariosOnline.map((u) => (
+                <li key={u.id} className="flex items-center gap-2 text-sm">
+                  <Circle className="h-2 w-2 fill-emerald-500 text-emerald-500" />
+                  <span className="font-medium">{u.nome}</span>
+                  <span className="text-xs text-muted-foreground">{u.email}</span>
+                  {u.id === sessao?.user?.id && (
+                    <span className="text-xs text-muted-foreground">(você)</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
 
       {mostrarFormulario && (
         <Card>

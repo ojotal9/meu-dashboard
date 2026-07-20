@@ -2,6 +2,7 @@ import { useState } from "react"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { LoginScreen } from "@/components/layout/login-screen"
 import { DashboardDataProvider } from "@/context/dashboard-data-context"
+import { PresenceProvider } from "@/context/presence-context"
 import { useAuth } from "@/context/auth-context"
 import { InicioTab } from "@/pages/inicio-tab"
 import { ClientesTab } from "@/pages/clientes-tab"
@@ -75,7 +76,9 @@ function App() {
   // Os dados do Supabase só são buscados depois que a pessoa está autenticada
   return (
     <DashboardDataProvider>
-      <ConteudoDashboard />
+      <PresenceProvider>
+        <ConteudoDashboard />
+      </PresenceProvider>
     </DashboardDataProvider>
   )
 }
