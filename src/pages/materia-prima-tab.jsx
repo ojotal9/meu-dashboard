@@ -30,9 +30,10 @@ import { CampoBusca } from "@/components/campo-busca"
 import { CabecalhoOrdenavel } from "@/components/cabecalho-ordenavel"
 import { useDashboardData } from "@/context/dashboard-data-context"
 import { useConfirm } from "@/context/confirm-context"
+import { useToast } from "@/context/toast-context"
 import { formatarDataBR, mascararDataDigitada, dataBrParaIso, dataIsoParaBr, ordenarLista } from "@/lib/utils"
 
-const TIPOS = ["Tinta", "Fitilho", "Matriz", "Clichê", "Outros"]
+const TIPOS = ["Produção", "Matéria-prima", "Fretes", "Comercial", "Administrativo", "Manutenção"]
 
 function hoje() {
   return new Date().toISOString().slice(0, 10) // yyyy-MM-dd
@@ -41,8 +42,9 @@ function hoje() {
 export function MateriaPrimaTab() {
   const { materiaPrimas, adicionarMateriaPrima, atualizarMateriaPrima, removerMateriaPrima } = useDashboardData()
   const confirmar = useConfirm()
+  const { mostrarToast } = useToast()
 
-  const [tipo, setTipo] = useState("Tinta")
+  const [tipo, setTipo] = useState("Produção")
   const [valor, setValor] = useState("")
   const [dataTexto, setDataTexto] = useState(dataIsoParaBr(hoje()))
   const [observacao, setObservacao] = useState("")
@@ -51,7 +53,7 @@ export function MateriaPrimaTab() {
 
   const [sheetAberto, setSheetAberto] = useState(false)
   const [editandoId, setEditandoId] = useState(null)
-  const [edicao, setEdicao] = useState({ tipo: "Tinta", valor: "", dataTexto: "", observacao: "" })
+  const [edicao, setEdicao] = useState({ tipo: "Produção", valor: "", dataTexto: "", observacao: "" })
 
   function aoClicarColuna(coluna) {
     setOrdenacao((o) =>
@@ -63,19 +65,19 @@ export function MateriaPrimaTab() {
     const valorTexto = valor.trim().replace(",", ".")
 
     if (!valorTexto || !dataTexto) {
-      alert("Preencha o valor e a data antes de adicionar")
+      mostrarToast("Preencha o valor e a data antes de adicionar", "erro")
       return
     }
 
     const dataIso = dataBrParaIso(dataTexto)
     if (!dataIso) {
-      alert("Digite a data no formato dd/mm/aaaa")
+      mostrarToast("Digite a data no formato dd/mm/aaaa", "erro")
       return
     }
 
     const valorNumerico = parseFloat(valorTexto)
     if (isNaN(valorNumerico)) {
-      alert("Digite o valor usando só números, tipo 150.00")
+      mostrarToast("Digite o valor usando só números, tipo 150.00", "erro")
       return
     }
 
@@ -105,19 +107,19 @@ export function MateriaPrimaTab() {
     const valorTexto = edicao.valor.trim().replace(",", ".")
 
     if (!valorTexto || !edicao.dataTexto) {
-      alert("Preencha o valor e a data")
+      mostrarToast("Preencha o valor e a data", "erro")
       return
     }
 
     const dataIso = dataBrParaIso(edicao.dataTexto)
     if (!dataIso) {
-      alert("Digite a data no formato dd/mm/aaaa")
+      mostrarToast("Digite a data no formato dd/mm/aaaa", "erro")
       return
     }
 
     const valorNumerico = parseFloat(valorTexto)
     if (isNaN(valorNumerico)) {
-      alert("Digite o valor usando só números, tipo 150.00")
+      mostrarToast("Digite o valor usando só números, tipo 150.00", "erro")
       return
     }
 
