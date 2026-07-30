@@ -1,7 +1,17 @@
 import { useState } from "react"
-import { AlertTriangle, TrendingUp, TrendingDown, Minus, Users, Receipt, ArrowRightLeft, Scale } from "lucide-react"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { AlertTriangle, TrendingUp, TrendingDown, Minus, Users, Receipt, ArrowRightLeft, Scale, Target } from "lucide-react"
+import { Card, CardHeader, CardTitle, CardAction, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import {
   Select,
   SelectTrigger,
@@ -18,6 +28,7 @@ import {
   Cell,
   ResponsiveContainer,
   CartesianGrid,
+  ReferenceLine,
 } from "recharts"
 import { useDashboardData } from "@/context/dashboard-data-context"
 import { useAuth } from "@/context/auth-context"
@@ -69,9 +80,11 @@ function calcularVariacao(atual, anterior) {
 }
 
 export function InicioTab({ onNavegar }) {
-  const { clientes, transacoes, contasPagar, contasReceber } = useDashboardData()
+  const { clientes, transacoes, contasPagar, contasReceber, meta, definirMeta } = useDashboardData()
   const { sessao, perfil, podeAcessar } = useAuth()
   const [mesSelecionado, setMesSelecionado] = useState("todos")
+  const [dialogoMetaAberto, setDialogoMetaAberto] = useState(false)
+  const [metaTexto, setMetaTexto] = useState("")
 
   const nomeExibido = perfil?.nome || sessao?.user?.email?.split("@")[0] || ""
 
@@ -130,6 +143,22 @@ export function InicioTab({ onNavegar }) {
     { name: "Entradas", value: totalEntrada },
     { name: "Saídas", value: totalSaida },
   ]
+
+  function abrirDialogoMeta() {
+    setMetaTexto(meta > 0 ? String(meta).replace(".", ",") : "")
+    setDialogoMetaAberto(true)
+  }
+
+  function handleSalvarMeta() {
+    const valorTexto = metaTexto.trim().replace(",", ".")
+    const valorNumerico = parseFloat(valorTexto)
+    if (!valorTexto || isNaN(valorNumerico) || valorNumerico < 0) {
+      alert("Digite um valor de meta válido, tipo 10000.00")
+      return
+    }
+    definirMeta(valorNumerico)
+    setDialogoMetaAberto(false)
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -310,6 +339,12 @@ export function InicioTab({ onNavegar }) {
       <Card>
         <CardHeader>
           <CardTitle>Entradas x Saídas</CardTitle>
+          <CardAction>
+            <Button size="sm" variant="outline" onClick={abrirDialogoMeta}>
+              <Target />
+              {meta > 0 ? "Editar meta" : "Definir meta"}
+            </Button>
+          </CardAction>
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={220}>
@@ -326,10 +361,49 @@ export function InicioTab({ onNavegar }) {
                   <Cell key={index} fill={CORES[index]} />
                 ))}
               </Bar>
+              {meta > 0 && (
+                <ReferenceLine
+                  x={meta}
+                  stroke="var(--color-foreground)"
+                  strokeDasharray="6 4"
+                  strokeWidth={1.5}
+                  label={{
+                    value: `Meta: ${formatarReais(meta)}`,
+                    position: "insideTopRight",
+                    fill: "var(--color-foreground)",
+                    fontSize: 12,
+                    fontWeight: 600,
+                  }}
+                />
+              )}
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
+
+      <Dialog open={dialogoMetaAberto} onOpenChange={setDialogoMetaAberto}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Definir meta</DialogTitle>
+            <DialogDescription>
+              Esse valor aparece como uma linha de referência no gráfico de Entradas x Saídas, pra você ver se bateu a meta.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="valor-meta">Valor da meta</Label>
+            <Input
+              id="valor-meta"
+              placeholder="ex: 10000.00"
+              value={metaTexto}
+              onChange={(e) => setMetaTexto(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogoMetaAberto(false)}>Cancelar</Button>
+            <Button onClick={handleSalvarMeta}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -5,6 +5,9 @@ import { adicionarMesesData, gerarValoresParcelas } from "@/lib/utils"
 
 const DashboardDataContext = createContext(null)
 
+// Linha fixa usada na tabela "metas" — é uma meta única do negócio, não uma por linha/usuário
+const ID_META = "00000000-0000-0000-0000-000000000001"
+
 // Remove o "id" de cada item, deixando o banco gerar um novo — usado ao importar backup
 function removerIds(itens) {
   return itens.map(({ id, ...resto }) => resto)
@@ -17,6 +20,7 @@ export function DashboardDataProvider({ children }) {
   const [transacoes, setTransacoes] = useState([])
   const [contasReceber, setContasReceber] = useState([])
   const [contasPagar, setContasPagar] = useState([])
+  const [meta, setMeta] = useState(0)
   const [carregando, setCarregando] = useState(true)
 
   // ---------- Busca de uma tabela por vez (usado no tempo real e após ações em lote) ----------
@@ -45,6 +49,11 @@ export function DashboardDataProvider({ children }) {
     if (!error) setContasPagar(data)
   }
 
+  async function carregarMeta() {
+    const { data, error } = await supabase.from("metas").select("*").eq("id", ID_META).maybeSingle()
+    if (!error && data) setMeta(data.valor)
+  }
+
   async function carregarTudo() {
     await Promise.all([
       carregarClientes(),
@@ -52,6 +61,7 @@ export function DashboardDataProvider({ children }) {
       carregarTransacoes(),
       carregarContasReceber(),
       carregarContasPagar(),
+      carregarMeta(),
     ])
     setCarregando(false)
   }
@@ -68,12 +78,30 @@ export function DashboardDataProvider({ children }) {
       .on("postgres_changes", { event: "*", schema: "public", table: "transacoes" }, carregarTransacoes)
       .on("postgres_changes", { event: "*", schema: "public", table: "contas_receber" }, carregarContasReceber)
       .on("postgres_changes", { event: "*", schema: "public", table: "contas_pagar" }, carregarContasPagar)
+      .on("postgres_changes", { event: "*", schema: "public", table: "metas" }, carregarMeta)
       .subscribe()
 
     return () => {
       supabase.removeChannel(canal)
     }
   }, [])
+
+  // ---------- Meta ----------
+  // Usa sempre a mesma linha fixa na tabela "metas" — é uma meta única do negócio,
+  // não uma por usuário.
+  async function definirMeta(valor) {
+    const { data, error } = await supabase
+      .from("metas")
+      .upsert({ id: ID_META, valor })
+      .select()
+      .single()
+    if (error) {
+      alert("Erro ao salvar meta: " + error.message)
+      return
+    }
+    setMeta(data.valor)
+    mostrarToast("Meta salva")
+  }
 
   // ---------- Clientes ----------
   async function adicionarCliente(cliente) {
@@ -537,6 +565,8 @@ export function DashboardDataProvider({ children }) {
     transacoes,
     contasReceber,
     contasPagar,
+    meta,
+    definirMeta,
     carregando,
     adicionarCliente,
     atualizarCliente,
