@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { AlertTriangle, TrendingUp, TrendingDown, Minus } from "lucide-react"
+import { AlertTriangle, TrendingUp, TrendingDown, Minus, Users, Receipt, ArrowRightLeft, Scale } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -34,7 +34,7 @@ function formatarSaldo(valor) {
   return `${sinal}${numero} R$`
 }
 
-const CORES = ["#0E6B58", "#9C3B33"]
+const CORES = ["var(--color-chart-1)", "var(--color-chart-2)"]
 
 // Mostra a variação percentual em relação ao mês passado, com seta e cor.
 // "invertido" é usado pra Saída, onde subir é ruim (vermelho) e descer é bom (verde).
@@ -174,7 +174,8 @@ export function InicioTab({ onNavegar }) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+            <CardTitle className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+              <Users className="h-3.5 w-3.5" />
               Clientes cadastrados
             </CardTitle>
           </CardHeader>
@@ -185,7 +186,8 @@ export function InicioTab({ onNavegar }) {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+            <CardTitle className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+              <ArrowRightLeft className="h-3.5 w-3.5" />
               Transações registradas
             </CardTitle>
           </CardHeader>
@@ -195,7 +197,10 @@ export function InicioTab({ onNavegar }) {
         </Card>
       </div>
 
-      <h2 className="text-lg font-semibold">Comparativo Mensal</h2>
+      <h2 className="titulo-secao">
+        <Receipt className="h-3.5 w-3.5" />
+        Comparativo Mensal
+      </h2>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
@@ -240,8 +245,11 @@ export function InicioTab({ onNavegar }) {
         </Card>
       </div>
 
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Resumo financeiro</h2>
+      <div className="flex items-center justify-between border-b border-border pb-2">
+        <h2 className="flex items-center gap-1.5 text-[13px] font-semibold tracking-wide text-muted-foreground uppercase">
+          <Scale className="h-3.5 w-3.5" />
+          Resumo financeiro
+        </h2>
         <Select value={mesSelecionado} onValueChange={setMesSelecionado}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Mês">

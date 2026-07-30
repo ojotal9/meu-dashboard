@@ -31,7 +31,7 @@ function formatarSaldo(valor) {
   return `${sinal}${numero} R$`
 }
 
-const CORES = ["#0E6B58", "#9C3B33"]
+const CORES = ["var(--color-chart-1)", "var(--color-chart-2)"]
 
 export function ResumoTab() {
   const { transacoes } = useDashboardData()
@@ -69,7 +69,7 @@ export function ResumoTab() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Resumo</h2>
+        <h2 className="titulo-secao">Resumo</h2>
         <Select value={mesSelecionado} onValueChange={setMesSelecionado}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Mês">

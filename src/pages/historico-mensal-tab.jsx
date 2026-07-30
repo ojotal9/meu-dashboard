@@ -133,8 +133,8 @@ export function HistoricoMensalTab() {
                 {...estiloTooltipGrafico}
               />
               <Legend />
-              <Bar dataKey="Entradas" fill="#16a34a" barSize={18} radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Saídas" fill="#dc2626" barSize={18} radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Entradas" fill="var(--color-chart-1)" barSize={18} radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Saídas" fill="var(--color-chart-2)" barSize={18} radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -159,8 +159,8 @@ export function HistoricoMensalTab() {
                 {...estiloTooltipGrafico}
               />
               <Legend />
-              <Bar dataKey="Contas a Pagar" fill="#dc2626" barSize={18} radius={[3, 3, 0, 0]} />
-              <Bar dataKey="Contas a Receber" fill="#16a34a" barSize={18} radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Contas a Pagar" fill="var(--color-chart-2)" barSize={18} radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Contas a Receber" fill="var(--color-chart-1)" barSize={18} radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
