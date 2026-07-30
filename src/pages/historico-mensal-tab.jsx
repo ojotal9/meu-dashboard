@@ -33,7 +33,7 @@ function formatarReais(valor) {
 }
 
 export function HistoricoMensalTab() {
-  const { transacoes } = useDashboardData()
+  const { transacoes, contasPagar, contasReceber } = useDashboardData()
   const [mesSelecionado, setMesSelecionado] = useState("todos")
 
   // Agrupa todas as transações por mês (chave "yyyy-MM")
@@ -64,6 +64,36 @@ export function HistoricoMensalTab() {
     mes: formatarMesAnoBR(m.chave),
     Entradas: m.entrada,
     Saídas: m.saida,
+  }))
+
+  // Agrupa contas a pagar e a receber pelo mês de vencimento (chave "yyyy-MM")
+  const mapaContas = new Map()
+  for (const c of contasPagar) {
+    const chave = c.vencimento?.slice(0, 7)
+    if (!chave) continue
+    if (!mapaContas.has(chave)) mapaContas.set(chave, { chave, pagar: 0, receber: 0 })
+    mapaContas.get(chave).pagar += c.valor
+  }
+  for (const c of contasReceber) {
+    const chave = c.vencimento?.slice(0, 7)
+    if (!chave) continue
+    if (!mapaContas.has(chave)) mapaContas.set(chave, { chave, pagar: 0, receber: 0 })
+    mapaContas.get(chave).receber += c.valor
+  }
+
+  const contasOrdenadas = Array.from(mapaContas.values()).sort((a, b) =>
+    a.chave.localeCompare(b.chave)
+  )
+
+  const contasFiltradas =
+    mesSelecionado === "todos"
+      ? contasOrdenadas
+      : contasOrdenadas.filter((m) => m.chave === mesSelecionado)
+
+  const dadosGraficoContas = contasFiltradas.map((m) => ({
+    mes: formatarMesAnoBR(m.chave),
+    "Contas a Pagar": m.pagar,
+    "Contas a Receber": m.receber,
   }))
 
   return (
@@ -98,6 +128,25 @@ export function HistoricoMensalTab() {
               <Legend />
               <Bar dataKey="Entradas" fill="#16a34a" />
               <Bar dataKey="Saídas" fill="#dc2626" />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Contas a Pagar x Contas a Receber por mês</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={dadosGraficoContas}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="mes" />
+              <YAxis />
+              <Tooltip formatter={(value) => formatarReais(value)} />
+              <Legend />
+              <Bar dataKey="Contas a Pagar" fill="#dc2626" />
+              <Bar dataKey="Contas a Receber" fill="#16a34a" />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
