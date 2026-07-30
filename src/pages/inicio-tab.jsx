@@ -29,6 +29,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   ReferenceLine,
+  LabelList,
 } from "recharts"
 import { useDashboardData } from "@/context/dashboard-data-context"
 import { useAuth } from "@/context/auth-context"
@@ -71,6 +72,53 @@ function IndicadorVariacao({ percentual, invertido = false }) {
       <Icone className="h-3.5 w-3.5" />
       {Math.abs(percentual).toFixed(0)}% vs mês passado
     </span>
+  )
+}
+
+// Bandeirinha desenhada no topo da linha de meta, com um ponto pulsante embaixo
+// marcando onde a linha cruza o gráfico — mais chamativo que um rótulo de texto simples.
+function BandeiraMeta({ viewBox, texto }) {
+  const { x, y, height } = viewBox
+  const largura = Math.max(74, texto.length * 6.5)
+  const alturaBandeira = 22
+
+  return (
+    <g>
+      <line
+        x1={x}
+        y1={y}
+        x2={x}
+        y2={y + height}
+        stroke="var(--color-foreground)"
+        strokeDasharray="6 4"
+        strokeWidth={1.5}
+        opacity={0.6}
+      />
+      <rect
+        x={x - largura / 2}
+        y={y - alturaBandeira - 8}
+        width={largura}
+        height={alturaBandeira}
+        rx={alturaBandeira / 2}
+        fill="var(--color-foreground)"
+      />
+      <polygon
+        points={`${x - 5},${y - 8} ${x + 5},${y - 8} ${x},${y - 1}`}
+        fill="var(--color-foreground)"
+      />
+      <text
+        x={x}
+        y={y - alturaBandeira / 2 - 8 + 4}
+        textAnchor="middle"
+        fontSize={11}
+        fontWeight={700}
+        fill="var(--color-background)"
+      >
+        {texto}
+      </text>
+      <circle cx={x} cy={y + height} r={7} fill="var(--color-foreground)" opacity={0.35} className="ponto-meta-pulso" />
+      <circle cx={x} cy={y + height} r={4} fill="var(--color-foreground)" />
+    </g>
   )
 }
 
@@ -347,33 +395,49 @@ export function InicioTab({ onNavegar }) {
           </CardAction>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={dadosGrafico} layout="vertical" margin={{ left: 20 }}>
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={dadosGrafico} layout="vertical" margin={{ left: 20, top: 28, right: 70 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} />
               <XAxis type="number" />
               <YAxis type="category" dataKey="name" width={80} />
               <Tooltip
-                formatter={(value) => formatarReais(value)}
+                formatter={(value, name) => {
+                  if (name === "Entradas" && meta > 0) {
+                    const percentual = Math.round((value / meta) * 100)
+                    return [`${formatarReais(value)}  ·  ${percentual}% da meta`, name]
+                  }
+                  return [formatarReais(value), name]
+                }}
                 {...estiloTooltipGrafico}
               />
               <Bar dataKey="value" barSize={40}>
                 {dadosGrafico.map((_, index) => (
                   <Cell key={index} fill={CORES[index]} />
                 ))}
+                {meta > 0 && totalEntrada >= meta && (
+                  <LabelList
+                    dataKey="value"
+                    content={({ x, y, width, height, index }) =>
+                      index === 0 ? (
+                        <text
+                          x={x + width + 10}
+                          y={y + height / 2 + 4}
+                          fontSize={12}
+                          fontWeight={700}
+                          fill="var(--color-chart-1)"
+                        >
+                          🎯 Meta batida
+                        </text>
+                      ) : null
+                    }
+                  />
+                )}
               </Bar>
               {meta > 0 && (
                 <ReferenceLine
                   x={meta}
-                  stroke="var(--color-foreground)"
-                  strokeDasharray="6 4"
-                  strokeWidth={1.5}
-                  label={{
-                    value: `Meta: ${formatarReais(meta)}`,
-                    position: "insideTopRight",
-                    fill: "var(--color-foreground)",
-                    fontSize: 12,
-                    fontWeight: 600,
-                  }}
+                  stroke="transparent"
+                  label={(props) => <BandeiraMeta {...props} texto={formatarReais(meta)} />}
                 />
               )}
             </BarChart>

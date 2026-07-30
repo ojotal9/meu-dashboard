@@ -149,6 +149,27 @@
   color: var(--muted-foreground);
 }
 
+@keyframes ponto-meta-pulso {
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+.ponto-meta-pulso {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: ponto-meta-pulso 1.8s ease-out infinite;
+}
+
 @keyframes conteudo-entra {
   from {
     opacity: 0;
