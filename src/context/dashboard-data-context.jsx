@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import { useToast } from "@/context/toast-context"
+import { adicionarMesesData, gerarValoresParcelas } from "@/lib/utils"
 
 const DashboardDataContext = createContext(null)
 
@@ -240,26 +241,46 @@ export function DashboardDataProvider({ children }) {
 
   // ---------- Contas a Receber ----------
   async function adicionarContaReceber(conta) {
-    const { data, error } = await supabase.from("contas_receber").insert(conta).select().single()
-    if (error) {
-      alert("Erro ao adicionar conta a receber: " + error.message)
-      return
+    const parcelas = conta.forma_pagamento === "cartao_credito" ? conta.parcelas || 1 : 1
+    const valoresParcelas = gerarValoresParcelas(conta.valor, parcelas)
+    const grupoParcela = parcelas > 1 ? crypto.randomUUID() : null
+
+    const registrosNovos = []
+    for (let i = 0; i < parcelas; i++) {
+      const registro = {
+        descricao: conta.descricao,
+        cliente: conta.cliente,
+        vencimento: adicionarMesesData(conta.vencimento, i),
+        valor: valoresParcelas[i],
+        status: conta.status,
+        forma_pagamento: conta.forma_pagamento,
+        parcelas,
+        parcela_atual: i + 1,
+        grupo_parcela: grupoParcela,
+      }
+
+      const { data, error } = await supabase.from("contas_receber").insert(registro).select().single()
+      if (error) {
+        alert("Erro ao adicionar conta a receber: " + error.message)
+        return
+      }
+      registrosNovos.push(data)
+
+      // Toda conta a receber já entra automaticamente como entrada nas transações/gráficos
+      await adicionarTransacao(
+        {
+          cliente: `Conta a receber: ${data.descricao}`,
+          valor: data.valor,
+          tipo: "entrada",
+          categoria: "Contas a Receber",
+          data: data.vencimento.slice(0, 7),
+        },
+        { semAviso: true }
+      )
     }
-    setContasReceber((prev) => [...prev, data])
 
-    // Toda conta a receber já entra automaticamente como entrada nas transações/gráficos
-    await adicionarTransacao(
-      {
-        cliente: `Conta a receber: ${data.descricao}`,
-        valor: data.valor,
-        tipo: "entrada",
-        categoria: "Contas a Receber",
-        data: data.vencimento.slice(0, 7),
-      },
-      { semAviso: true }
-    )
-
-    mostrarToast("Conta a receber adicionada")
+    setContasReceber((prev) => [...prev, ...registrosNovos])
+    mostrarToast(parcelas > 1 ? `Conta a receber adicionada em ${parcelas}x` : "Conta a receber adicionada")
   }
 
   async function marcarContaReceberComoRecebida(id) {
@@ -323,26 +344,46 @@ export function DashboardDataProvider({ children }) {
 
   // ---------- Contas a Pagar ----------
   async function adicionarContaPagar(conta) {
-    const { data, error } = await supabase.from("contas_pagar").insert(conta).select().single()
-    if (error) {
-      alert("Erro ao adicionar conta a pagar: " + error.message)
-      return
+    const parcelas = conta.forma_pagamento === "cartao_credito" ? conta.parcelas || 1 : 1
+    const valoresParcelas = gerarValoresParcelas(conta.valor, parcelas)
+    const grupoParcela = parcelas > 1 ? crypto.randomUUID() : null
+
+    const registrosNovos = []
+    for (let i = 0; i < parcelas; i++) {
+      const registro = {
+        descricao: conta.descricao,
+        fornecedor: conta.fornecedor,
+        vencimento: adicionarMesesData(conta.vencimento, i),
+        valor: valoresParcelas[i],
+        status: conta.status,
+        forma_pagamento: conta.forma_pagamento,
+        parcelas,
+        parcela_atual: i + 1,
+        grupo_parcela: grupoParcela,
+      }
+
+      const { data, error } = await supabase.from("contas_pagar").insert(registro).select().single()
+      if (error) {
+        alert("Erro ao adicionar conta a pagar: " + error.message)
+        return
+      }
+      registrosNovos.push(data)
+
+      // Toda conta a pagar já entra automaticamente como saída nas transações/gráficos
+      await adicionarTransacao(
+        {
+          cliente: `Conta a pagar: ${data.descricao}`,
+          valor: data.valor,
+          tipo: "saida",
+          categoria: "Contas a Pagar",
+          data: data.vencimento.slice(0, 7),
+        },
+        { semAviso: true }
+      )
     }
-    setContasPagar((prev) => [...prev, data])
 
-    // Toda conta a pagar já entra automaticamente como saída nas transações/gráficos
-    await adicionarTransacao(
-      {
-        cliente: `Conta a pagar: ${data.descricao}`,
-        valor: data.valor,
-        tipo: "saida",
-        categoria: "Contas a Pagar",
-        data: data.vencimento.slice(0, 7),
-      },
-      { semAviso: true }
-    )
-
-    mostrarToast("Conta a pagar adicionada")
+    setContasPagar((prev) => [...prev, ...registrosNovos])
+    mostrarToast(parcelas > 1 ? `Conta a pagar adicionada em ${parcelas}x` : "Conta a pagar adicionada")
   }
 
   async function marcarContaPagarComoPaga(id) {

@@ -5,6 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select"
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -50,6 +57,13 @@ const ROTULO_STATUS = {
   atrasado: "Atrasado",
 }
 
+const ROTULO_FORMA_PAGAMENTO = {
+  cartao_credito: "Cartão de Crédito",
+  cartao_debito: "Cartão de Débito",
+  pix: "PIX",
+  dinheiro: "Dinheiro",
+}
+
 export function ContasReceberTab() {
   const { contasReceber, adicionarContaReceber, marcarContaReceberComoRecebida, reabrirContaReceber, removerContaReceber } =
     useDashboardData()
@@ -60,6 +74,8 @@ export function ContasReceberTab() {
   const [cliente, setCliente] = useState("")
   const [vencimentoTexto, setVencimentoTexto] = useState("")
   const [valor, setValor] = useState("")
+  const [formaPagamento, setFormaPagamento] = useState("dinheiro")
+  const [parcelas, setParcelas] = useState("1")
 
   const contasComStatus = contasReceber.map((c) => ({ ...c, statusReal: statusReal(c) }))
   const totalPendentes = contasComStatus.filter((c) => c.statusReal === "pendente").length
@@ -71,6 +87,8 @@ export function ContasReceberTab() {
     setCliente("")
     setVencimentoTexto("")
     setValor("")
+    setFormaPagamento("dinheiro")
+    setParcelas("1")
     setDialogoAberto(false)
   }
 
@@ -89,12 +107,16 @@ export function ContasReceberTab() {
       return
     }
 
+    const quantidadeParcelas = formaPagamento === "cartao_credito" ? parseInt(parcelas, 10) || 1 : 1
+
     adicionarContaReceber({
       descricao: descricao.trim(),
       cliente: cliente.trim(),
       vencimento: vencimentoIso,
       valor: valorNumerico,
       status: "pendente",
+      forma_pagamento: formaPagamento,
+      parcelas: quantidadeParcelas,
     })
 
     limparFormulario()
@@ -157,6 +179,7 @@ export function ContasReceberTab() {
                 <TableHead>Cliente</TableHead>
                 <TableHead>Vencimento</TableHead>
                 <TableHead>Valor</TableHead>
+                <TableHead>Pagamento</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead></TableHead>
               </TableRow>
@@ -168,6 +191,14 @@ export function ContasReceberTab() {
                   <TableCell data-label="Cliente">{conta.cliente}</TableCell>
                   <TableCell data-label="Vencimento">{formatarDataBR(conta.vencimento)}</TableCell>
                   <TableCell data-label="Valor">{formatarReais(conta.valor)}</TableCell>
+                  <TableCell data-label="Pagamento">
+                    {ROTULO_FORMA_PAGAMENTO[conta.forma_pagamento] || "—"}
+                    {conta.parcelas > 1 && (
+                      <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                        {conta.parcela_atual}/{conta.parcelas}
+                      </span>
+                    )}
+                  </TableCell>
                   <TableCell data-label="Status">
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${ESTILO_STATUS[conta.statusReal]}`}>
                       {ROTULO_STATUS[conta.statusReal]}
@@ -239,6 +270,40 @@ export function ContasReceberTab() {
                 onChange={(e) => setValor(e.target.value)}
               />
             </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="forma-pagamento-receber">Forma de pagamento</Label>
+              <Select value={formaPagamento} onValueChange={setFormaPagamento}>
+                <SelectTrigger id="forma-pagamento-receber">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
+                  <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
+                  <SelectItem value="pix">PIX</SelectItem>
+                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {formaPagamento === "cartao_credito" && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="parcelas-receber">Parcelado em quantas vezes?</Label>
+                <Input
+                  id="parcelas-receber"
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={parcelas}
+                  onChange={(e) => setParcelas(e.target.value)}
+                />
+                {parseInt(parcelas, 10) > 1 && !isNaN(parseFloat(valor.replace(",", "."))) && (
+                  <p className="text-xs text-muted-foreground">
+                    {parcelas}x de{" "}
+                    {formatarReais(parseFloat(valor.replace(",", ".")) / parseInt(parcelas, 10))} — uma parcela por
+                    mês a partir do vencimento informado
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={limparFormulario}>Cancelar</Button>

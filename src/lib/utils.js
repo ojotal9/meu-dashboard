@@ -88,6 +88,34 @@ export function formatarMesAnoBR(chave) {
   return `${NOMES_MESES[numeroMes - 1]} de ${ano}`
 }
 
+// Soma uma quantidade de meses a uma data "aaaa-mm-dd" (usado pra gerar o vencimento
+// das parcelas futuras). Se o dia não existir no mês de destino (ex: dia 31 num mês
+// de 30 dias), usa o último dia daquele mês em vez de estourar pro mês seguinte.
+export function adicionarMesesData(dataIso, quantidadeMeses) {
+  const [ano, mes, dia] = dataIso.split("-").map(Number)
+  const indiceMesDestino = mes - 1 + quantidadeMeses
+  const anoDestino = ano + Math.floor(indiceMesDestino / 12)
+  const mesDestino = ((indiceMesDestino % 12) + 12) % 12
+  const ultimoDiaDoMes = new Date(anoDestino, mesDestino + 1, 0).getDate()
+  const diaFinal = Math.min(dia, ultimoDiaDoMes)
+  return `${anoDestino}-${String(mesDestino + 1).padStart(2, "0")}-${String(diaFinal).padStart(2, "0")}`
+}
+
+// Divide um valor total em N parcelas, jogando o arredondamento de centavos
+// na última parcela pra soma bater certinho com o valor total.
+export function gerarValoresParcelas(valorTotal, quantidadeParcelas) {
+  const totalCentavos = Math.round(valorTotal * 100)
+  const baseCentavos = Math.floor(totalCentavos / quantidadeParcelas)
+  const valores = []
+  let acumulado = 0
+  for (let i = 0; i < quantidadeParcelas; i++) {
+    const centavos = i === quantidadeParcelas - 1 ? totalCentavos - acumulado : baseCentavos
+    valores.push(centavos / 100)
+    acumulado += centavos
+  }
+  return valores
+}
+
 // Estilo padrão do tooltip dos gráficos (Recharts), pra acompanhar o tema claro/escuro
 // do dashboard em vez do fundo branco fixo que vem por padrão.
 export const estiloTooltipGrafico = {
