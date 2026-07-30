@@ -120,14 +120,18 @@ export function HistoricoMensalTab() {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={dadosGrafico}>
+            <BarChart data={dadosGrafico} barGap={4} barCategoryGap="25%">
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="mes" />
+              <XAxis
+                dataKey="mes"
+                tick={{ fontSize: 13, fontWeight: 700, fill: "var(--color-foreground)" }}
+                tickMargin={10}
+              />
               <YAxis />
               <Tooltip formatter={(value) => formatarReais(value)} />
               <Legend />
-              <Bar dataKey="Entradas" fill="#16a34a" />
-              <Bar dataKey="Saídas" fill="#dc2626" />
+              <Bar dataKey="Entradas" fill="#16a34a" barSize={18} radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Saídas" fill="#dc2626" barSize={18} radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -139,14 +143,18 @@ export function HistoricoMensalTab() {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={dadosGraficoContas}>
+            <BarChart data={dadosGraficoContas} barGap={4} barCategoryGap="25%">
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="mes" />
+              <XAxis
+                dataKey="mes"
+                tick={{ fontSize: 13, fontWeight: 700, fill: "var(--color-foreground)" }}
+                tickMargin={10}
+              />
               <YAxis />
               <Tooltip formatter={(value) => formatarReais(value)} />
               <Legend />
-              <Bar dataKey="Contas a Pagar" fill="#dc2626" />
-              <Bar dataKey="Contas a Receber" fill="#16a34a" />
+              <Bar dataKey="Contas a Pagar" fill="#dc2626" barSize={18} radius={[3, 3, 0, 0]} />
+              <Bar dataKey="Contas a Receber" fill="#16a34a" barSize={18} radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
