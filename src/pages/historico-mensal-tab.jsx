@@ -26,7 +26,7 @@ import {
   CartesianGrid,
 } from "recharts"
 import { useDashboardData } from "@/context/dashboard-data-context"
-import { formatarMesAnoBR } from "@/lib/utils"
+import { formatarMesAnoBR, estiloTooltipGrafico } from "@/lib/utils"
 
 function formatarReais(valor) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
@@ -128,7 +128,10 @@ export function HistoricoMensalTab() {
                 tickMargin={10}
               />
               <YAxis />
-              <Tooltip formatter={(value) => formatarReais(value)} />
+              <Tooltip
+                formatter={(value) => formatarReais(value)}
+                {...estiloTooltipGrafico}
+              />
               <Legend />
               <Bar dataKey="Entradas" fill="#16a34a" barSize={18} radius={[3, 3, 0, 0]} />
               <Bar dataKey="Saídas" fill="#dc2626" barSize={18} radius={[3, 3, 0, 0]} />
@@ -151,7 +154,10 @@ export function HistoricoMensalTab() {
                 tickMargin={10}
               />
               <YAxis />
-              <Tooltip formatter={(value) => formatarReais(value)} />
+              <Tooltip
+                formatter={(value) => formatarReais(value)}
+                {...estiloTooltipGrafico}
+              />
               <Legend />
               <Bar dataKey="Contas a Pagar" fill="#dc2626" barSize={18} radius={[3, 3, 0, 0]} />
               <Bar dataKey="Contas a Receber" fill="#16a34a" barSize={18} radius={[3, 3, 0, 0]} />

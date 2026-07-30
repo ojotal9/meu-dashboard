@@ -21,7 +21,7 @@ import {
 } from "recharts"
 import { useDashboardData } from "@/context/dashboard-data-context"
 import { useAuth } from "@/context/auth-context"
-import { formatarMesAnoBR } from "@/lib/utils"
+import { formatarMesAnoBR, estiloTooltipGrafico } from "@/lib/utils"
 
 function formatarReais(valor) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
@@ -309,7 +309,10 @@ export function InicioTab({ onNavegar }) {
               <CartesianGrid strokeDasharray="3 3" horizontal={false} />
               <XAxis type="number" />
               <YAxis type="category" dataKey="name" width={80} />
-              <Tooltip formatter={(value) => formatarReais(value)} />
+              <Tooltip
+                formatter={(value) => formatarReais(value)}
+                {...estiloTooltipGrafico}
+              />
               <Bar dataKey="value" barSize={40}>
                 {dadosGrafico.map((_, index) => (
                   <Cell key={index} fill={CORES[index]} />

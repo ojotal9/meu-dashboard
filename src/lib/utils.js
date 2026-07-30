@@ -87,3 +87,16 @@ export function formatarMesAnoBR(chave) {
   if (!ano || !numeroMes || numeroMes < 1 || numeroMes > 12) return chave
   return `${NOMES_MESES[numeroMes - 1]} de ${ano}`
 }
+
+// Estilo padrão do tooltip dos gráficos (Recharts), pra acompanhar o tema claro/escuro
+// do dashboard em vez do fundo branco fixo que vem por padrão.
+export const estiloTooltipGrafico = {
+  contentStyle: {
+    backgroundColor: "var(--color-popover)",
+    borderColor: "var(--color-border)",
+    borderRadius: "0.5rem",
+    color: "var(--color-popover-foreground)",
+  },
+  labelStyle: { color: "var(--color-popover-foreground)", fontWeight: 700 },
+  itemStyle: { color: "var(--color-popover-foreground)" },
+}
