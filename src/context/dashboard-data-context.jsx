@@ -149,14 +149,19 @@ export function DashboardDataProvider({ children }) {
 
     setMateriaPrimas((prev) => [...prev, data])
 
-    // Toda compra de matéria-prima também vira uma "saída" automática nas transações
+    // Toda compra de matéria-prima também vira uma "saída" automática nas transações.
+    // Importante: o restante do sistema (Resumo financeiro, Histórico Mensal, comparativo
+    // com o mês anterior) trabalha com a data das transações no formato "aaaa-mm" (só
+    // ano e mês). Por isso, aqui a data completa da saída ("aaaa-mm-dd") precisa ser
+    // cortada pra "aaaa-mm" antes de virar transação — sem isso, o valor não aparecia
+    // nos resumos porque a data nunca batia com o mês selecionado.
     await adicionarTransacao(
       {
         cliente: `Matéria-prima: ${data.tipo}`,
         valor: data.valor,
         tipo: "saida",
         categoria: "Matéria-prima",
-        data: data.data,
+        data: data.data.slice(0, 7),
       },
       { semAviso: true }
     )
@@ -180,19 +185,22 @@ export function DashboardDataProvider({ children }) {
 
     setMateriaPrimas((prev) => prev.map((m) => (m.id === id ? data : m)))
 
-    // Atualiza também a transação automática que essa saída gerou
+    // Atualiza também a transação automática que essa saída gerou.
+    // A transação usa a data em "aaaa-mm" (mesmo formato do resto do sistema), então
+    // tanto pra atualizar quanto pra encontrar a transação antiga é preciso cortar a
+    // data completa da matéria-prima ("aaaa-mm-dd") pra esse mesmo formato.
     if (itemAntigo) {
       const { data: transacaoAtualizada } = await supabase
         .from("transacoes")
         .update({
           cliente: `Matéria-prima: ${data.tipo}`,
           valor: data.valor,
-          data: data.data,
+          data: data.data.slice(0, 7),
         })
         .eq("tipo", "saida")
         .eq("cliente", `Matéria-prima: ${itemAntigo.tipo}`)
         .eq("valor", itemAntigo.valor)
-        .eq("data", itemAntigo.data)
+        .eq("data", itemAntigo.data.slice(0, 7))
         .select()
         .single()
 
@@ -215,20 +223,21 @@ export function DashboardDataProvider({ children }) {
 
     setMateriaPrimas((prev) => prev.filter((m) => m.id !== id))
 
-    // Remove também a saída correspondente das transações
+    // Remove também a saída correspondente das transações (que usa a data em "aaaa-mm")
     if (item) {
       const cliente = `Matéria-prima: ${item.tipo}`
+      const mesReferencia = item.data.slice(0, 7)
       await supabase
         .from("transacoes")
         .delete()
         .eq("tipo", "saida")
         .eq("cliente", cliente)
         .eq("valor", item.valor)
-        .eq("data", item.data)
+        .eq("data", mesReferencia)
 
       setTransacoes((prev) =>
         prev.filter(
-          (t) => !(t.tipo === "saida" && t.cliente === cliente && t.valor === item.valor && t.data === item.data)
+          (t) => !(t.tipo === "saida" && t.cliente === cliente && t.valor === item.valor && t.data === mesReferencia)
         )
       )
     }
