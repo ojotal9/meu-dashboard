@@ -189,6 +189,46 @@
   .animar-entrada {
     animation: none;
   }
+  [data-slot="table-body"] tr,
+  .grade-anima > * {
+    animation: none !important;
+  }
+}
+
+/* Linhas de tabela entram uma depois da outra, em vez de tudo aparecer de uma vez */
+[data-slot="table-body"] tr {
+  animation: conteudo-entra 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+[data-slot="table-body"] tr:nth-child(1) { animation-delay: 0.02s; }
+[data-slot="table-body"] tr:nth-child(2) { animation-delay: 0.05s; }
+[data-slot="table-body"] tr:nth-child(3) { animation-delay: 0.08s; }
+[data-slot="table-body"] tr:nth-child(4) { animation-delay: 0.11s; }
+[data-slot="table-body"] tr:nth-child(5) { animation-delay: 0.14s; }
+[data-slot="table-body"] tr:nth-child(6) { animation-delay: 0.17s; }
+[data-slot="table-body"] tr:nth-child(7) { animation-delay: 0.2s; }
+[data-slot="table-body"] tr:nth-child(8) { animation-delay: 0.23s; }
+[data-slot="table-body"] tr:nth-child(9) { animation-delay: 0.26s; }
+[data-slot="table-body"] tr:nth-child(10) { animation-delay: 0.29s; }
+[data-slot="table-body"] tr:nth-child(n+11) { animation-delay: 0.32s; }
+
+/* Cards dentro de um ".grade-anima" (grids de métricas) entram em sequência, tipo um "pop" */
+.grade-anima > * {
+  animation: card-pop 0.34s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.grade-anima > *:nth-child(1) { animation-delay: 0.03s; }
+.grade-anima > *:nth-child(2) { animation-delay: 0.09s; }
+.grade-anima > *:nth-child(3) { animation-delay: 0.15s; }
+.grade-anima > *:nth-child(4) { animation-delay: 0.21s; }
+
+@keyframes card-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Em telas estreitas, tabelas viram uma lista de cartões (uma linha = um cartão),

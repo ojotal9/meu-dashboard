@@ -34,6 +34,7 @@ import {
 import { useDashboardData } from "@/context/dashboard-data-context"
 import { useAuth } from "@/context/auth-context"
 import { formatarMesAnoBR, estiloTooltipGrafico } from "@/lib/utils"
+import { useContagemAnimada } from "@/hooks/use-contagem-animada"
 
 function formatarReais(valor) {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
@@ -192,6 +193,16 @@ export function InicioTab({ onNavegar }) {
     { name: "Saídas", value: totalSaida },
   ]
 
+  // Números que "contam" suavemente até o valor novo, em vez de trocar de uma vez
+  const clientesAnimado = useContagemAnimada(clientes.length)
+  const transacoesAnimado = useContagemAnimada(transacoes.length)
+  const entradaMesAnimado = useContagemAnimada(totalMesAtual.entrada)
+  const saidaMesAnimado = useContagemAnimada(totalMesAtual.saida)
+  const saldoMesAnimado = useContagemAnimada(totalMesAtual.saldo)
+  const entradaAnimado = useContagemAnimada(totalEntrada)
+  const saidaAnimado = useContagemAnimada(totalSaida)
+  const saldoAnimado = useContagemAnimada(saldo)
+
   function abrirDialogoMeta() {
     setMetaTexto(meta > 0 ? String(meta).replace(".", ",") : "")
     setDialogoMetaAberto(true)
@@ -248,7 +259,7 @@ export function InicioTab({ onNavegar }) {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 grade-anima">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-1.5 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
@@ -257,7 +268,7 @@ export function InicioTab({ onNavegar }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="font-mono text-3xl font-medium tabular-nums">{clientes.length}</div>
+            <div className="font-mono text-3xl font-medium tabular-nums">{Math.round(clientesAnimado)}</div>
           </CardContent>
         </Card>
 
@@ -269,7 +280,7 @@ export function InicioTab({ onNavegar }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="font-mono text-3xl font-medium tabular-nums">{transacoes.length}</div>
+            <div className="font-mono text-3xl font-medium tabular-nums">{Math.round(transacoesAnimado)}</div>
           </CardContent>
         </Card>
       </div>
@@ -279,7 +290,7 @@ export function InicioTab({ onNavegar }) {
         Comparativo Mensal
       </h2>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 grade-anima">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
@@ -287,7 +298,7 @@ export function InicioTab({ onNavegar }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-1">
-            <div className="font-mono text-2xl font-medium tabular-nums">{formatarReais(totalMesAtual.entrada)}</div>
+            <div className="font-mono text-2xl font-medium tabular-nums">{formatarReais(entradaMesAnimado)}</div>
             <IndicadorVariacao percentual={variacaoEntrada} />
           </CardContent>
         </Card>
@@ -299,7 +310,7 @@ export function InicioTab({ onNavegar }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-1">
-            <div className="font-mono text-2xl font-medium tabular-nums">{formatarReais(totalMesAtual.saida)}</div>
+            <div className="font-mono text-2xl font-medium tabular-nums">{formatarReais(saidaMesAnimado)}</div>
             <IndicadorVariacao percentual={variacaoSaida} invertido />
           </CardContent>
         </Card>
@@ -315,7 +326,7 @@ export function InicioTab({ onNavegar }) {
           </CardHeader>
           <CardContent className="flex flex-col gap-1">
             <div className={`font-mono text-2xl font-medium tabular-nums ${totalMesAtual.saldo < 0 ? "text-destructive" : ""}`}>
-              {formatarSaldo(totalMesAtual.saldo)}
+              {formatarSaldo(saldoMesAnimado)}
             </div>
             <IndicadorVariacao percentual={variacaoSaldo} />
           </CardContent>
@@ -344,7 +355,7 @@ export function InicioTab({ onNavegar }) {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 grade-anima">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
@@ -352,7 +363,7 @@ export function InicioTab({ onNavegar }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="font-mono text-2xl font-medium tabular-nums">{formatarReais(totalEntrada)}</div>
+            <div className="font-mono text-2xl font-medium tabular-nums">{formatarReais(entradaAnimado)}</div>
           </CardContent>
         </Card>
 
@@ -363,7 +374,7 @@ export function InicioTab({ onNavegar }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="font-mono text-2xl font-medium tabular-nums">{formatarReais(totalSaida)}</div>
+            <div className="font-mono text-2xl font-medium tabular-nums">{formatarReais(saidaAnimado)}</div>
           </CardContent>
         </Card>
 
@@ -378,7 +389,7 @@ export function InicioTab({ onNavegar }) {
           </CardHeader>
           <CardContent>
             <div className={`font-mono text-2xl font-medium tabular-nums ${saldo < 0 ? "text-destructive" : ""}`}>
-              {formatarSaldo(saldo)}
+              {formatarSaldo(saldoAnimado)}
             </div>
           </CardContent>
         </Card>
