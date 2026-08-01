@@ -14,6 +14,7 @@ import { ConfiguracoesTab } from "@/pages/configuracoes-tab"
 import { UsuariosTab } from "@/pages/usuarios-tab"
 import { ContasReceberTab } from "@/pages/contas-receber-tab"
 import { ContasPagarTab } from "@/pages/contas-pagar-tab"
+import { MargemProdutoTab } from "@/pages/margem-produto-tab"
 
 const TODAS_PAGINAS = {
   inicio: { titulo: "Início", Componente: InicioTab },
@@ -21,6 +22,7 @@ const TODAS_PAGINAS = {
   "materia-prima": { titulo: "Saídas", Componente: MateriaPrimaTab },
   "resumo-cliente": { titulo: "Resumo por Cliente", Componente: ResumoClienteTab },
   transacoes: { titulo: "Transações", Componente: TransacoesTab },
+  "margem-produto": { titulo: "Lucro por Venda", Componente: MargemProdutoTab },
   historico: { titulo: "Histórico Mensal", Componente: HistoricoMensalTab },
   "contas-receber": { titulo: "Contas a Receber", Componente: ContasReceberTab },
   "contas-pagar": { titulo: "Contas a Pagar", Componente: ContasPagarTab },

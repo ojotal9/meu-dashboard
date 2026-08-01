@@ -13,6 +13,7 @@ import {
   History,
   TrendingUp,
   Wallet,
+  PieChart,
 } from "lucide-react"
 import logoVilaPack from "@/assets/logo-vilapack.png"
 import { useAuth } from "@/context/auth-context"
@@ -34,6 +35,7 @@ const paginasDashboard = [
   { chave: "materia-prima", titulo: "Saídas", Icone: Package },
   { chave: "resumo-cliente", titulo: "Resumo por Cliente", Icone: ClipboardList },
   { chave: "transacoes", titulo: "Transações", Icone: ArrowLeftRight },
+  { chave: "margem-produto", titulo: "Lucro por Venda", Icone: PieChart },
   { chave: "contas-receber", titulo: "Contas a Receber", Icone: TrendingUp },
   { chave: "contas-pagar", titulo: "Contas a Pagar", Icone: Wallet },
   { chave: "historico", titulo: "Histórico Mensal", Icone: History },

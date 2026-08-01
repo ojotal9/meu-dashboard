@@ -30,6 +30,7 @@ const PAGINAS_DISPONIVEIS = [
   { chave: "materia-prima", titulo: "Saídas" },
   { chave: "resumo-cliente", titulo: "Resumo por Cliente" },
   { chave: "transacoes", titulo: "Transações" },
+  { chave: "margem-produto", titulo: "Lucro por Venda" },
   { chave: "contas-receber", titulo: "Contas a Receber" },
   { chave: "contas-pagar", titulo: "Contas a Pagar" },
   { chave: "historico", titulo: "Histórico Mensal" },
