@@ -28,6 +28,7 @@ import {
   TableCell,
 } from "@/components/ui/table"
 import { useDashboardData } from "@/context/dashboard-data-context"
+import { useAuth } from "@/context/auth-context"
 import { useConfirm } from "@/context/confirm-context"
 import { formatarDataBR, mascararDataDigitada, dataBrParaIso } from "@/lib/utils"
 
@@ -68,6 +69,7 @@ export function ContasReceberTab() {
   const { contasReceber, adicionarContaReceber, marcarContaReceberComoRecebida, reabrirContaReceber, removerContaReceber } =
     useDashboardData()
   const confirmar = useConfirm()
+  const { podeExecutarAcao } = useAuth()
 
   const [dialogoAberto, setDialogoAberto] = useState(false)
   const [descricao, setDescricao] = useState("")
@@ -216,17 +218,19 @@ export function ContasReceberTab() {
                         Recebido
                       </Button>
                     )}
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={async () => {
-                        if (await confirmar({ titulo: `Remover a conta "${conta.descricao}"?` })) {
-                          removerContaReceber(conta.id)
-                        }
-                      }}
-                    >
-                      Remover
-                    </Button>
+                    {podeExecutarAcao("contas-receber", "remover") && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={async () => {
+                          if (await confirmar({ titulo: `Remover a conta "${conta.descricao}"?` })) {
+                            removerContaReceber(conta.id)
+                          }
+                        }}
+                      >
+                        Remover
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

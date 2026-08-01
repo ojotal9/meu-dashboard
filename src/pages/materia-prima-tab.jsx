@@ -29,6 +29,7 @@ import {
 import { CampoBusca } from "@/components/campo-busca"
 import { CabecalhoOrdenavel } from "@/components/cabecalho-ordenavel"
 import { useDashboardData } from "@/context/dashboard-data-context"
+import { useAuth } from "@/context/auth-context"
 import { useConfirm } from "@/context/confirm-context"
 import { useToast } from "@/context/toast-context"
 import { formatarDataBR, mascararDataDigitada, dataBrParaIso, dataIsoParaBr, ordenarLista } from "@/lib/utils"
@@ -42,6 +43,7 @@ function hoje() {
 export function MateriaPrimaTab() {
   const { materiaPrimas, adicionarMateriaPrima, atualizarMateriaPrima, removerMateriaPrima } = useDashboardData()
   const confirmar = useConfirm()
+  const { podeExecutarAcao } = useAuth()
   const { mostrarToast } = useToast()
 
   const [tipo, setTipo] = useState("Produção")
@@ -197,17 +199,19 @@ export function MateriaPrimaTab() {
                   <Pencil />
                   Editar
                 </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={async () => {
-                    if (await confirmar({ titulo: `Remover essa saída de "${item.tipo}"?` })) {
-                      removerMateriaPrima(item.id)
-                    }
-                  }}
-                >
-                  Remover
-                </Button>
+                {podeExecutarAcao("materia-prima", "remover") && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={async () => {
+                      if (await confirmar({ titulo: `Remover essa saída de "${item.tipo}"?` })) {
+                        removerMateriaPrima(item.id)
+                      }
+                    }}
+                  >
+                    Remover
+                  </Button>
+                )}
               </TableCell>
             </TableRow>
           ))}

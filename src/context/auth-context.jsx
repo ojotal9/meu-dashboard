@@ -53,6 +53,17 @@ export function AuthProvider({ children }) {
     return perfil?.paginas_permitidas?.includes(chaveDaPagina) ?? false
   }
 
+  // Permissão mais granular: além de acessar a página, a pessoa pode ou não ter
+  // uma ação específica restrita dentro dela (por enquanto, só "remover"). Uma
+  // página sem restrições cadastradas (ou array vazio) significa acesso total —
+  // é o comportamento padrão, igual já era antes dessa permissão existir.
+  function podeExecutarAcao(chaveDaPagina, acao) {
+    if (ehAdmin) return true
+    if (!podeAcessar(chaveDaPagina)) return false
+    const restricoes = perfil?.acoes_restritas?.[chaveDaPagina] || []
+    return !restricoes.includes(acao)
+  }
+
   // ---------- Gestão de usuários (perfis) — só admins conseguem, a política do banco garante isso ----------
   async function carregarTodosPerfis() {
     const { data, error } = await supabase.from("perfis").select("*").order("nome")
@@ -84,7 +95,7 @@ export function AuthProvider({ children }) {
 
   // Cria o login (e-mail + senha) e o perfil de uma vez, via função de servidor
   // (precisa da chave secreta do Supabase, que só existe no servidor, nunca no navegador)
-  async function criarUsuarioCompleto({ email, senha, nome, role, paginas_permitidas }) {
+  async function criarUsuarioCompleto({ email, senha, nome, role, paginas_permitidas, acoes_restritas }) {
     try {
       const resposta = await fetch("/api/criar-usuario", {
         method: "POST",
@@ -92,7 +103,7 @@ export function AuthProvider({ children }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${sessao?.access_token}`,
         },
-        body: JSON.stringify({ email, senha, nome, role, paginas_permitidas }),
+        body: JSON.stringify({ email, senha, nome, role, paginas_permitidas, acoes_restritas }),
       })
       const resultado = await resposta.json()
 
@@ -141,6 +152,7 @@ export function AuthProvider({ children }) {
     sair,
     ehAdmin,
     podeAcessar,
+    podeExecutarAcao,
     todosPerfis,
     carregarTodosPerfis,
     criarPerfil,

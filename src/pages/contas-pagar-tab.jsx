@@ -28,6 +28,7 @@ import {
   TableCell,
 } from "@/components/ui/table"
 import { useDashboardData } from "@/context/dashboard-data-context"
+import { useAuth } from "@/context/auth-context"
 import { useConfirm } from "@/context/confirm-context"
 import { formatarDataBR, mascararDataDigitada, dataBrParaIso } from "@/lib/utils"
 
@@ -68,6 +69,7 @@ export function ContasPagarTab() {
   const { contasPagar, adicionarContaPagar, marcarContaPagarComoPaga, reabrirContaPagar, removerContaPagar } =
     useDashboardData()
   const confirmar = useConfirm()
+  const { podeExecutarAcao } = useAuth()
 
   const [dialogoAberto, setDialogoAberto] = useState(false)
   const [descricao, setDescricao] = useState("")
@@ -216,17 +218,19 @@ export function ContasPagarTab() {
                         Pago
                       </Button>
                     )}
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={async () => {
-                        if (await confirmar({ titulo: `Remover a conta "${conta.descricao}"?` })) {
-                          removerContaPagar(conta.id)
-                        }
-                      }}
-                    >
-                      Remover
-                    </Button>
+                    {podeExecutarAcao("contas-pagar", "remover") && (
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={async () => {
+                          if (await confirmar({ titulo: `Remover a conta "${conta.descricao}"?` })) {
+                            removerContaPagar(conta.id)
+                          }
+                        }}
+                      >
+                        Remover
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

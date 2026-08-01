@@ -37,7 +37,17 @@ const PAGINAS_DISPONIVEIS = [
   { chave: "usuarios", titulo: "Usuários" },
 ]
 
-const FORMULARIO_VAZIO = { nome: "", email: "", senha: "", role: "funcionario", paginas_permitidas: [] }
+// Páginas onde faz sentido restringir a ação de remover (as que têm algo pra apagar)
+const PAGINAS_COM_REMOCAO = ["clientes", "materia-prima", "transacoes", "contas-receber", "contas-pagar"]
+
+const FORMULARIO_VAZIO = {
+  nome: "",
+  email: "",
+  senha: "",
+  role: "funcionario",
+  paginas_permitidas: [],
+  acoes_restritas: {},
+}
 
 export function UsuariosTab() {
   const {
@@ -65,12 +75,34 @@ export function UsuariosTab() {
   }, [ehAdmin])
 
   function alternarPagina(chave) {
-    setFormulario((f) => ({
-      ...f,
-      paginas_permitidas: f.paginas_permitidas.includes(chave)
-        ? f.paginas_permitidas.filter((p) => p !== chave)
-        : [...f.paginas_permitidas, chave],
-    }))
+    setFormulario((f) => {
+      const marcando = !f.paginas_permitidas.includes(chave)
+      const paginas_permitidas = marcando
+        ? [...f.paginas_permitidas, chave]
+        : f.paginas_permitidas.filter((p) => p !== chave)
+
+      // Se a página foi desmarcada, não faz sentido manter uma restrição de ação nela
+      const acoes_restritas = { ...f.acoes_restritas }
+      if (!marcando) delete acoes_restritas[chave]
+
+      return { ...f, paginas_permitidas, acoes_restritas }
+    })
+  }
+
+  function alternarRestricaoRemover(chave) {
+    setFormulario((f) => {
+      const restricoesAtuais = f.acoes_restritas[chave] || []
+      const bloqueado = restricoesAtuais.includes("remover")
+      const acoes_restritas = { ...f.acoes_restritas }
+
+      if (bloqueado) {
+        acoes_restritas[chave] = restricoesAtuais.filter((a) => a !== "remover")
+      } else {
+        acoes_restritas[chave] = [...restricoesAtuais, "remover"]
+      }
+
+      return { ...f, acoes_restritas }
+    })
   }
 
   function iniciarEdicao(p) {
@@ -81,6 +113,7 @@ export function UsuariosTab() {
       senha: "",
       role: p.role,
       paginas_permitidas: p.paginas_permitidas || [],
+      acoes_restritas: p.acoes_restritas || {},
     })
     setMostrarFormulario(true)
   }
@@ -106,6 +139,7 @@ export function UsuariosTab() {
         email: formulario.email.trim(),
         role: formulario.role,
         paginas_permitidas: formulario.role === "admin" ? [] : formulario.paginas_permitidas,
+        acoes_restritas: formulario.role === "admin" ? {} : formulario.acoes_restritas,
       })
     } else {
       if (!formulario.email.trim() || !formulario.senha.trim()) {
@@ -124,6 +158,7 @@ export function UsuariosTab() {
         nome: formulario.nome.trim(),
         role: formulario.role,
         paginas_permitidas: formulario.paginas_permitidas,
+        acoes_restritas: formulario.acoes_restritas,
       })
     }
 
@@ -302,6 +337,36 @@ export function UsuariosTab() {
                 </div>
               </div>
             )}
+
+            {formulario.role === "funcionario" &&
+              formulario.paginas_permitidas.some((chave) => PAGINAS_COM_REMOCAO.includes(chave)) && (
+                <div className="flex flex-col gap-2">
+                  <Label>Pode remover itens</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Desmarcado, a pessoa consegue ver e lançar dados nessa página, mas não apaga nada.
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {PAGINAS_DISPONIVEIS.filter(
+                      (pagina) =>
+                        PAGINAS_COM_REMOCAO.includes(pagina.chave) &&
+                        formulario.paginas_permitidas.includes(pagina.chave)
+                    ).map((pagina) => (
+                      <label
+                        key={pagina.chave}
+                        className="flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/5"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={!(formulario.acoes_restritas[pagina.chave] || []).includes("remover")}
+                          onChange={() => alternarRestricaoRemover(pagina.chave)}
+                          className="accent-primary"
+                        />
+                        {pagina.titulo}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
 
             <div className="flex gap-2">
               <Button onClick={handleSalvar} disabled={salvando}>

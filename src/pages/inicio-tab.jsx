@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { AlertTriangle, TrendingUp, TrendingDown, Minus, Users, Receipt, ArrowRightLeft, Scale, Target } from "lucide-react"
+import { AlertTriangle, TrendingUp, TrendingDown, Minus, Users, Receipt, ArrowRightLeft, Scale, Target, Pencil, Trash2 } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardAction, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -129,11 +129,14 @@ function calcularVariacao(atual, anterior) {
 }
 
 export function InicioTab({ onNavegar }) {
-  const { clientes, transacoes, contasPagar, contasReceber, meta, definirMeta } = useDashboardData()
+  const { clientes, transacoes, contasPagar, contasReceber, metas, adicionarMeta, atualizarMeta, removerMeta } = useDashboardData()
   const { sessao, perfil, podeAcessar } = useAuth()
   const [mesSelecionado, setMesSelecionado] = useState("todos")
-  const [dialogoMetaAberto, setDialogoMetaAberto] = useState(false)
-  const [metaTexto, setMetaTexto] = useState("")
+  const [dialogoMetasAberto, setDialogoMetasAberto] = useState(false)
+  const [editandoMetaId, setEditandoMetaId] = useState(null)
+  const [tituloMeta, setTituloMeta] = useState("")
+  const [valorMetaTexto, setValorMetaTexto] = useState("")
+  const [mesMetaTexto, setMesMetaTexto] = useState("")
 
   const nomeExibido = perfil?.nome || sessao?.user?.email?.split("@")[0] || ""
 
@@ -203,20 +206,60 @@ export function InicioTab({ onNavegar }) {
   const saidaAnimado = useContagemAnimada(totalSaida)
   const saldoAnimado = useContagemAnimada(saldo)
 
-  function abrirDialogoMeta() {
-    setMetaTexto(meta > 0 ? String(meta).replace(".", ",") : "")
-    setDialogoMetaAberto(true)
+  // ---------- Metas ----------
+  // Prioridade: se existir uma meta específica pro mês selecionado, ela vale.
+  // Sem meta específica, cai pra meta "geral" (sem mês definido), se houver uma.
+  const metaEspecifica = mesSelecionado !== "todos" ? metas.find((m) => m.mes === mesSelecionado) : null
+  const metaGeral = metas.find((m) => !m.mes)
+  const metaAplicavel = metaEspecifica || metaGeral || null
+  const valorMetaAtual = metaAplicavel?.valor || 0
+
+  const metasOrdenadas = [...metas].sort((a, b) => {
+    if (!a.mes && b.mes) return -1
+    if (a.mes && !b.mes) return 1
+    return (a.mes || "").localeCompare(b.mes || "")
+  })
+
+  function limparFormularioMeta() {
+    setEditandoMetaId(null)
+    setTituloMeta("")
+    setValorMetaTexto("")
+    setMesMetaTexto("")
+  }
+
+  function abrirDialogoMetas() {
+    limparFormularioMeta()
+    setDialogoMetasAberto(true)
+  }
+
+  function abrirEdicaoMeta(item) {
+    setEditandoMetaId(item.id)
+    setTituloMeta(item.titulo)
+    setValorMetaTexto(String(item.valor).replace(".", ","))
+    setMesMetaTexto(item.mes || "")
   }
 
   function handleSalvarMeta() {
-    const valorTexto = metaTexto.trim().replace(",", ".")
+    const valorTexto = valorMetaTexto.trim().replace(",", ".")
     const valorNumerico = parseFloat(valorTexto)
-    if (!valorTexto || isNaN(valorNumerico) || valorNumerico < 0) {
-      alert("Digite um valor de meta válido, tipo 10000.00")
+    if (!tituloMeta.trim() || !valorTexto || isNaN(valorNumerico) || valorNumerico < 0) {
+      alert("Preencha um título e um valor de meta válido, tipo 10000.00")
       return
     }
-    definirMeta(valorNumerico)
-    setDialogoMetaAberto(false)
+
+    const dadosMeta = {
+      titulo: tituloMeta.trim(),
+      valor: valorNumerico,
+      mes: mesMetaTexto || null,
+    }
+
+    if (editandoMetaId) {
+      atualizarMeta(editandoMetaId, dadosMeta)
+    } else {
+      adicionarMeta(dadosMeta)
+    }
+
+    limparFormularioMeta()
   }
 
   return (
@@ -398,10 +441,13 @@ export function InicioTab({ onNavegar }) {
       <Card>
         <CardHeader>
           <CardTitle>Entradas x Saídas</CardTitle>
+          {metaAplicavel && (
+            <p className="text-xs text-muted-foreground">Meta ativa: {metaAplicavel.titulo}</p>
+          )}
           <CardAction>
-            <Button size="sm" variant="outline" onClick={abrirDialogoMeta}>
+            <Button size="sm" variant="outline" onClick={abrirDialogoMetas}>
               <Target />
-              {meta > 0 ? "Editar meta" : "Definir meta"}
+              Gerenciar metas
             </Button>
           </CardAction>
         </CardHeader>
@@ -413,8 +459,8 @@ export function InicioTab({ onNavegar }) {
               <YAxis type="category" dataKey="name" width={80} />
               <Tooltip
                 formatter={(value, name) => {
-                  if (name === "Entradas" && meta > 0) {
-                    const percentual = Math.round((value / meta) * 100)
+                  if (name === "Entradas" && valorMetaAtual > 0) {
+                    const percentual = Math.round((value / valorMetaAtual) * 100)
                     return [`${formatarReais(value)}  ·  ${percentual}% da meta`, name]
                   }
                   return [formatarReais(value), name]
@@ -425,7 +471,7 @@ export function InicioTab({ onNavegar }) {
                 {dadosGrafico.map((_, index) => (
                   <Cell key={index} fill={CORES[index]} />
                 ))}
-                {meta > 0 && totalEntrada >= meta && (
+                {valorMetaAtual > 0 && totalEntrada >= valorMetaAtual && (
                   <LabelList
                     dataKey="value"
                     content={({ x, y, width, height, index }) =>
@@ -444,11 +490,11 @@ export function InicioTab({ onNavegar }) {
                   />
                 )}
               </Bar>
-              {meta > 0 && (
+              {valorMetaAtual > 0 && (
                 <ReferenceLine
-                  x={meta}
+                  x={valorMetaAtual}
                   stroke="transparent"
-                  label={(props) => <BandeiraMeta {...props} texto={formatarReais(meta)} />}
+                  label={(props) => <BandeiraMeta {...props} texto={formatarReais(valorMetaAtual)} />}
                 />
               )}
             </BarChart>
@@ -456,26 +502,83 @@ export function InicioTab({ onNavegar }) {
         </CardContent>
       </Card>
 
-      <Dialog open={dialogoMetaAberto} onOpenChange={setDialogoMetaAberto}>
-        <DialogContent>
+      <Dialog open={dialogoMetasAberto} onOpenChange={setDialogoMetasAberto}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Definir meta</DialogTitle>
+            <DialogTitle>Metas</DialogTitle>
             <DialogDescription>
-              Esse valor aparece como uma linha de referência no gráfico de Entradas x Saídas, pra você ver se bateu a meta.
+              Uma meta "geral" vale sempre. Uma meta com mês específico tem prioridade sobre a geral
+              quando esse mês estiver selecionado no Resumo financeiro.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="valor-meta">Valor da meta</Label>
-            <Input
-              id="valor-meta"
-              placeholder="ex: 10000.00"
-              value={metaTexto}
-              onChange={(e) => setMetaTexto(e.target.value)}
-            />
+
+          <div className="flex max-h-56 flex-col gap-2 overflow-y-auto">
+            {metasOrdenadas.length === 0 && (
+              <p className="text-sm text-muted-foreground">Nenhuma meta cadastrada ainda.</p>
+            )}
+            {metasOrdenadas.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between gap-2 rounded-md border border-border p-2"
+              >
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">{item.titulo}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {item.mes ? formatarMesAnoBR(item.mes) : "Meta geral"} · {formatarReais(item.valor)}
+                  </span>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="icon-sm" variant="ghost" onClick={() => abrirEdicaoMeta(item)}>
+                    <Pencil />
+                  </Button>
+                  <Button size="icon-sm" variant="ghost" onClick={() => removerMeta(item.id)}>
+                    <Trash2 />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
+
+          <div className="flex flex-col gap-3 border-t border-border pt-3">
+            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              {editandoMetaId ? "Editar meta" : "Nova meta"}
+            </p>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="titulo-meta">Título</Label>
+              <Input
+                id="titulo-meta"
+                placeholder="ex: Meta de vendas"
+                value={tituloMeta}
+                onChange={(e) => setTituloMeta(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="valor-meta">Valor</Label>
+              <Input
+                id="valor-meta"
+                placeholder="ex: 10000.00"
+                value={valorMetaTexto}
+                onChange={(e) => setValorMetaTexto(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="mes-meta">Mês (opcional — deixe vazio pra meta geral)</Label>
+              <Input
+                id="mes-meta"
+                type="month"
+                value={mesMetaTexto}
+                onChange={(e) => setMesMetaTexto(e.target.value)}
+              />
+            </div>
+          </div>
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogoMetaAberto(false)}>Cancelar</Button>
-            <Button onClick={handleSalvarMeta}>Salvar</Button>
+            {editandoMetaId && (
+              <Button variant="outline" onClick={limparFormularioMeta}>
+                Cancelar edição
+              </Button>
+            )}
+            <Button onClick={handleSalvarMeta}>{editandoMetaId ? "Salvar alterações" : "Adicionar meta"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

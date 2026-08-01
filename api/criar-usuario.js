@@ -51,7 +51,7 @@ export default async function handler(req, res) {
     return
   }
 
-  const { email, senha, nome, role, paginas_permitidas } = req.body || {}
+  const { email, senha, nome, role, paginas_permitidas, acoes_restritas } = req.body || {}
 
   if (!email || !senha || !nome) {
     res.status(400).json({ error: "Preencha e-mail, senha e nome" })
@@ -79,6 +79,7 @@ export default async function handler(req, res) {
       email,
       role: role === "admin" ? "admin" : "funcionario",
       paginas_permitidas: role === "admin" ? [] : paginas_permitidas || [],
+      acoes_restritas: role === "admin" ? {} : acoes_restritas || {},
     })
     .select()
     .single()
