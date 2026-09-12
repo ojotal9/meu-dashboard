@@ -1,0 +1,99 @@
+/* Shared visual system for dashboard pages. */
+:root{--muted:#5d6c83;--green:#147957;--red:#b83b50;--positive-soft:#eaf7f0;--negative-soft:#fff0f2;--warning:#8a6011;--warning-soft:#fff6df;--hover:#f0f4fc;--radius-control:10px;--radius-panel:16px}
+[data-theme="dark"]{--muted:#b0bed3;--green:#73d8ad;--red:#ffa0ad;--positive-soft:#193d36;--negative-soft:#412b3b;--warning:#f3d08a;--warning-soft:#3b3426;--hover:#23334c;--line:#2c3b52;--text:#edf2fc}
+.app-shell{font-size:15px}
+.sidebar .brand{padding-top:22px;padding-bottom:18px}
+.sidebar .brand span{font-size:10px;color:var(--muted)}
+.sidebar .workspace{margin-bottom:14px;padding:12px}
+.sidebar nav{padding-bottom:12px;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.sidebar .nav-group{margin-bottom:12px}
+.sidebar .nav-label{font-size:10px;letter-spacing:1.25px;color:var(--muted);padding-top:4px;padding-bottom:7px}
+.sidebar .nav-item{min-height:40px;padding:9px 12px;margin-bottom:3px;font-size:13px;color:var(--muted);border-radius:10px;gap:11px}
+.sidebar .nav-item .icon{width:18px;height:18px}
+.sidebar .nav-item:hover{background:var(--hover);color:var(--text)}
+.sidebar .nav-item.active{background:var(--blue-light);color:var(--blue);font-weight:650;box-shadow:inset 3px 0 0 var(--blue)}
+.sidebar .sidebar-foot{padding-top:14px;padding-bottom:14px}
+.sidebar-foot small,.workspace small{font-size:11px;color:var(--muted)}
+.page-heading p,.greeting,.breadcrumbs,.period-bar,.period-detail{color:var(--muted);font-size:13px}
+.panel,.kpi{border-radius:var(--radius-panel);box-shadow:0 3px 18px #0b204b06}
+.panel-heading h2,.table-toolbar h2{font-size:18px}
+.panel-heading p{font-size:12px;color:var(--muted)}
+.kpi{min-width:0;border-top:3px solid var(--line)}
+.kpi.kpi-receive{border-top-color:var(--green)}
+.kpi.kpi-send{border-top-color:var(--red)}
+.kpi-receive .kpi-icon{background:var(--positive-soft);color:var(--green)}
+.kpi-send .kpi-icon{background:var(--negative-soft);color:var(--red)}
+.kpi-receive .kpi-value{color:var(--green)}
+.kpi-send .kpi-value{color:var(--red)}
+.kpi.accent{border-top-color:#91b1ff;background:linear-gradient(125deg,#244cce,#1939a0);color:white}
+[data-theme="dark"] .kpi.accent{background:linear-gradient(125deg,#2e53c9,#203b91)}
+.kpi-head{font-size:13px;color:var(--muted)}
+.kpi-value{font-size:clamp(24px,2vw,34px);letter-spacing:-.8px;overflow-wrap:anywhere}
+.kpi-foot,.kpi-unit{font-size:11px;color:var(--muted)}
+.kpi.accent .kpi-head,.kpi.accent .kpi-foot{color:#e5ecff}
+.kpi.accent .change{background:#ffffff24;color:white}
+.change{font-size:11px;background:var(--positive-soft);color:var(--green);border-radius:6px}
+.change.negative{background:var(--negative-soft);color:var(--red)}
+[data-theme="dark"] .change,[data-theme="dark"] .badge{filter:none}
+.chart-grid{stroke:var(--line);stroke-width:1;stroke-dasharray:3 7;opacity:.65}
+.chart-label{fill:var(--muted);font-size:12px}
+.chart-legend{font-size:12px;color:var(--muted)}
+.bar-in{fill:var(--green)}
+.bar-out{fill:var(--red);opacity:.78}
+.chart-legend .in{background:var(--green)}
+.chart-legend .out{background:var(--red)}
+.product-panel .chart-legend .in{background:#3159de}
+.product-panel .chart-legend .out{background:#8bb8d9}
+.panel-bottom,.goal-footer,.pagination,.page-footer{font-size:12px;color:var(--muted)}
+.goal-ring{background:conic-gradient(from 220deg,#5278ee calc(var(--progress)*.8%),var(--line) 0 80%,transparent 0)}
+.goal-ring small,.goal-description small{font-size:11px;color:var(--muted)}
+.due-description strong,.due-value strong,.category>div:first-child,.category strong{font-size:13px}
+.due-description small,.due-value small{font-size:12px}
+.category span{color:var(--muted)}
+.due-icon.out{background:var(--negative-soft);color:var(--red)}
+.mini-kpis span{font-size:13px}
+.mini-kpis small{font-size:12px}
+table{font-size:13px}
+th{font-size:11px;letter-spacing:.2px;color:var(--muted);padding:15px 20px}
+td{padding:17px 20px;color:var(--muted)}
+td.numeric{color:var(--text);font-weight:550;font-variant-numeric:tabular-nums;white-space:nowrap}
+th.numeric,td.numeric{text-align:right}
+tbody tr:hover,tbody tr:focus-within{background:var(--hover)}
+.sort-mark{color:var(--muted);font-size:12px}
+.source-hint{font-size:11px;color:var(--muted)}
+.badge{border-radius:7px;padding:5px 9px;font-size:11px;font-weight:600;line-height:1.4}
+.badge::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.badge.entrada,.badge.recebido,.badge.pago,.badge.online{background:var(--positive-soft);color:var(--green)}
+.badge.saida,.badge.atrasado{background:var(--negative-soft);color:var(--red)}
+.badge.pendente{background:var(--warning-soft);color:var(--warning)}
+.badge.offline{background:var(--surface-soft);color:var(--muted)}
+.button{min-height:40px;border-radius:var(--radius-control);font-size:13px;padding:9px 15px;gap:8px}
+.button .icon,.icon-button .icon{width:18px;height:18px}
+.icon-button,.row-actions .icon-button{width:36px;height:36px;border-radius:var(--radius-control)}
+.icon-button:hover{background:var(--hover);color:var(--blue)}
+.icon-button.danger:hover{background:var(--negative-soft);color:var(--red)}
+.button.tiny{min-height:34px;padding:6px 10px;font-size:12px}
+.row-actions{gap:6px}
+input,select,textarea{border-radius:var(--radius-control);font-size:14px}
+input::placeholder{color:var(--muted);opacity:.85}
+.search{border-radius:var(--radius-control);border-color:var(--line)}
+.search input,.search-form select,.search-form>.button{min-height:40px;font-size:13px}
+.search:focus-within{outline:2px solid var(--blue);outline-offset:2px}
+.form-fields label,.file-label,.check-label{font-size:13px}
+.form-dialog,.confirm-dialog{border-radius:var(--radius-panel)}
+.table-scroll{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+@media(max-width:1200px){.kpi-foot{flex-wrap:wrap;gap:5px}.chart-grid-layout{gap:18px}}
+@media(max-width:760px){
+ .sidebar .nav-item{min-height:44px}
+ .kpi-head{font-size:12px}.kpi-value{font-size:24px}.kpi-foot{font-size:11px}
+ .panel-heading h2,.table-toolbar h2{font-size:16px}
+ .chart-label{font-size:17px}.chart-legend{font-size:11px}
+ .mini-kpis{gap:10px}.mini-kpis span,.mini-kpis small{font-size:11px}
+ .mini-kpis strong{font-size:18px;overflow-wrap:anywhere}
+ .panel-bottom{flex-wrap:wrap;font-size:11px}
+ .page-footer{font-size:11px;flex-wrap:wrap}
+ .row-actions .icon-button{width:40px;height:40px}
+ .form-fields{grid-template-columns:1fr}
+ .search-form{gap:10px}.search-form select{max-width:100%}
+}
+@media(prefers-reduced-motion:no-preference){.nav-item,.button,.icon-button,tbody tr{transition:background-color .15s,color .15s}}
