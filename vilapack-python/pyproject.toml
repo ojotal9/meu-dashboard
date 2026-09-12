@@ -1,0 +1,17 @@
+[project]
+name = "vilapack-dashboard"
+version = "1.0.0"
+requires-python = ">=3.12"
+dependencies = [
+    "Flask==3.1.3",
+    "requests==2.34.2",
+    "python-dotenv==1.2.3",
+    "waitress==3.0.2",
+    "cryptography==50.0.1",
+]
+
+[tool.uv]
+package = false
+
+[tool.vercel]
+entrypoint = "index:app"
