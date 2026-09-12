@@ -216,7 +216,7 @@ class RemoteContractTests(unittest.TestCase):
     def test_missing_migration_is_actionable(self):
         response = Mock(content=b'{}', ok=False, status_code=404)
         response.json.return_value = {"code": "PGRST202", "message": "RPC missing"}
-        with patch("requests.request", return_value=response), self.assertRaisesRegex(DataError, "supabase_migration.sql"):
+        with patch("requests.Session.request", return_value=response), self.assertRaisesRegex(DataError, "supabase_migration.sql"):
             SupabaseStore("https://example.supabase.co", "public", "jwt").mutate([{"op": "insert"}])
 
     def test_auth_and_admin_keys_are_separate(self):

@@ -20,7 +20,7 @@ from data import DataError, SupabaseAuth
 def forbid_network(monkeypatch):
     def forbidden(*args, **kwargs):
         raise AssertionError("Authentication tests must not contact a real Supabase project")
-    monkeypatch.setattr("requests.request", forbidden)
+    monkeypatch.setattr("requests.Session.request", forbidden)
 
 
 @pytest.mark.parametrize("method", ["login", "refresh"])
