@@ -85,13 +85,21 @@ A atualização entre usuários utiliza recarregamento a cada aproximadamente **
 
 ## Verificação
 
-Os testes cobrem cálculos, parcelas, vínculos, importação, rotas, CSRF, permissões, isolamento da demonstração e sessões compartilhadas entre instâncias. Para executar:
+Os testes cobrem cálculos, parcelas, vínculos, importação, rotas, CSRF, permissões, isolamento da demonstração, sessões compartilhadas entre instâncias e desempenho das consultas.
 
-Resultado desta entrega: **98 testes e 30 subtestes passaram**. Também foram verificadas a instalação em ambiente limpo pelo `uv.lock`, a disponibilidade de dependências para Linux/Python 3.12, os campos de `vercel.json` e a sintaxe SQL/PL/pgSQL das migrações.
+Resultado da atualização de desempenho: **129 testes e 30 subtestes passaram**. Os novos testes comparam o HTML e o CSV gerados com o carregamento completo anterior, conferem a paginação e verificam a reutilização de conexões sem compartilhar cookies ou cabeçalhos de autenticação. A instalação pelo `uv.lock`, as dependências Linux/Python 3.12, `vercel.json` e a sintaxe SQL/PL/pgSQL foram verificados na preparação da versão inicial. Para executar:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
 .\.venv\Scripts\python.exe -m pytest tests -q
 ```
 
-As migrações SQL receberam revisão estática; **não foram executadas contra um PostgreSQL/Supabase real**. A autenticação e a integração remota foram verificadas com respostas simuladas. A conexão final depende da configuração e das políticas do seu projeto Supabase. Nenhum deploy real foi realizado nesta entrega.
+Os testes automatizados usam respostas simuladas para o Supabase e um servidor HTTP local para verificar conexões. A validação em produção depende da configuração e das políticas do seu projeto. As migrações SQL são aplicadas manualmente no Supabase.
+
+## Desempenho
+
+Cada página consulta apenas as tabelas necessárias para seus dados, filtros e sugestões dos formulários. Clientes lê uma tabela; Configurações dispensa consultas financeiras. Exportações CSV leem somente a tabela de origem necessária. As leituras continuam atualizadas a cada requisição, com autenticação e RLS.
+
+O cliente HTTP reutiliza conexões TCP/TLS. Credenciais continuam sendo enviadas por requisição; cookies do Supabase não são preservados entre chamadas. A primeira página de cada tabela solicita a contagem exata para evitar a consulta vazia ao fim da leitura, respeitando limites menores de paginação configurados no Supabase. Se a contagem não estiver disponível, a leitura completa anterior é usada como alternativa.
+
+Veja [DESEMPENHO.md](DESEMPENHO.md) para o escopo da atualização e sua validação.

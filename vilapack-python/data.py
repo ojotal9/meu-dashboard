@@ -292,12 +292,41 @@ class LocalStore:
         self.connection.close()
 
 
-def _request(method, url, headers, **kwargs):
+_HTTP_LOCAL = threading.local()
+_HTTP_LOCK = threading.Lock()
+_HTTP_ADAPTER = None
+
+
+def _http_client():
+    """Thread-local clients share TCP pools, never user headers or cookies."""
     import requests
+    global _HTTP_ADAPTER
+    client = getattr(_HTTP_LOCAL, 'client', None)
+    if client is None:
+        with _HTTP_LOCK:
+            if _HTTP_ADAPTER is None:
+                # Reuse TLS connections even when a page uses short-lived
+                # worker threads. Never retry financial writes automatically.
+                _HTTP_ADAPTER = requests.adapters.HTTPAdapter(pool_connections=8, pool_maxsize=32, max_retries=0)
+        client = requests.Session()
+        client.mount('https://', _HTTP_ADAPTER)
+        client.mount('http://', _HTTP_ADAPTER)
+        _HTTP_LOCAL.client = client
+    return client
+
+
+def _request(method, url, headers, *, response_headers=None, **kwargs):
+    import requests
+    client = _http_client()
+    client.cookies.clear()
     try:
-        response = requests.request(method, url, headers=headers, timeout=(10, 45), **kwargs)
+        response = client.request(method, url, headers=headers, timeout=(10, 45), **kwargs)
     except requests.RequestException as exc:
         raise DataError("Não foi possível conectar ao Supabase. Confira sua conexão e tente novamente.") from exc
+    finally:
+        client.cookies.clear()
+    if response_headers is not None:
+        response_headers.update({name.lower(): value for name, value in response.headers.items()})
     try:
         body = response.json() if response.content else None
     except ValueError:
@@ -342,10 +371,13 @@ class SupabaseStore:
         # service_key deliberately never retained or sent by this store.
 
     def list(self, table):
-        result, offset = [], 0
+        result, offset, total = [], 0, None
         while True:
-            rows = _request("GET", f"{self.url}/rest/v1/{_table(table)}", self.headers,
-                            params={"select": "*", "order": "id.asc", "offset": offset, "limit": 1000})
+            metadata = {}
+            headers = dict(self.headers, Prefer='count=exact') if offset == 0 else self.headers
+            rows = _request("GET", f"{self.url}/rest/v1/{_table(table)}", headers,
+                            params={"select": "*", "order": "id.asc", "offset": offset, "limit": 1000},
+                            response_headers=metadata)
             if not isinstance(rows, list):
                 raise DataError("Resposta inesperada do Supabase.")
             result.extend(rows)
@@ -353,6 +385,11 @@ class SupabaseStore:
                 break
             # Do not assume a 1,000-row server cap: projects can configure lower caps.
             offset += len(rows)
+            count = re.fullmatch(r'(?:\d+-\d+|\*)/(\d+)', metadata.get('content-range', ''))
+            if count:
+                total = int(count.group(1))
+            if total is not None and offset >= total:
+                break
         return result
 
     def get(self, table, id):

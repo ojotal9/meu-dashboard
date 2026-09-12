@@ -9,7 +9,7 @@ from datetime import date
 from decimal import Decimal
 from flask import Flask, g, request, render_template, redirect, url_for, flash, abort, Response
 from dotenv import load_dotenv
-from data import DashboardService, LocalStore, SupabaseAuth, DataError
+from data import DashboardService, LocalStore, SupabaseAuth, DataError, FINANCIAL_TABLES
 from analytics import build_summary, seed_demo
 from auth import initialize_auth, require_access, can_access, can_action
 
@@ -32,6 +32,28 @@ PAGES = {
 }
 TABLE_PAGE = {'clientes':'clientes','transacoes':'transacoes','materia_primas':'materia-prima','contas_receber':'contas-receber','contas_pagar':'contas-pagar','metas':'inicio','perfis':'usuarios'}
 PAGE_TABLE = {v:k for k,v in TABLE_PAGE.items() if k != 'metas'}
+
+# Only load the data actually rendered by each page, including month choices
+# and client suggestions in forms. Authentication and RLS still run each time.
+PAGE_DATA = {
+    'inicio': ('transacoes','clientes','contas_receber','contas_pagar','metas'),
+    'transacoes': ('transacoes','clientes'),
+    'contas-receber': ('contas_receber','transacoes','clientes'),
+    'contas-pagar': ('contas_pagar','transacoes'),
+    'materia-prima': ('materia_primas','transacoes'),
+    'clientes': ('clientes',),
+    'resumo-cliente': ('transacoes',),
+    'margem-produto': ('transacoes',),
+    'historico': ('transacoes','contas_receber','contas_pagar'),
+    'configuracoes': (),
+    'usuarios': (),
+}
+EXPORT_DATA = {
+    'inicio': ('transacoes',), 'transacoes': ('transacoes',), 'clientes': ('clientes',),
+    'materia-prima': ('materia_primas',), 'contas-receber': ('contas_receber',),
+    'contas-pagar': ('contas_pagar',), 'resumo-cliente': ('transacoes',),
+    'margem-produto': ('transacoes',), 'historico': ('transacoes',),
+}
 
 
 def field(name, label, kind='text', required=False, options=None):
@@ -145,14 +167,16 @@ def create_app(config=None):
             response.headers['Cache-Control']='no-store'
         return response
 
-    def load_data():
-        tables=[t for t in TABLE_PAGE if t != 'perfis']
+    def load_data(tables):
+        data={table:[] for table in FINANCIAL_TABLES}
         store=g.store
-        if isinstance(store,LocalStore):
-            return {t:store.list(t) for t in tables}
-        from concurrent.futures import ThreadPoolExecutor
-        with ThreadPoolExecutor(max_workers=6) as pool:
-            return dict(zip(tables,pool.map(store.list,tables)))
+        if isinstance(store,LocalStore) or len(tables)<=1:
+            data.update({t:store.list(t) for t in tables})
+        else:
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=len(tables)) as pool:
+                data.update(zip(tables,pool.map(store.list,tables)))
+        return data
 
     @app.get('/health')
     def health():
@@ -177,7 +201,7 @@ def create_app(config=None):
                 date.fromisoformat(month+'-01')
             except ValueError:
                 month=date.today().strftime('%Y-%m')
-        data=load_data()
+        data=load_data(PAGE_DATA[page])
         summary=build_summary(data,month)
         table=PAGE_TABLE.get(page)
         rows=[]
@@ -305,7 +329,7 @@ def create_app(config=None):
         require_access(page)
         if page=='inicio':
             require_access('transacoes')
-        data=load_data()
+        data=load_data(EXPORT_DATA[page])
         month=request.args.get('mes','todos')
         if month!='todos':
             try:

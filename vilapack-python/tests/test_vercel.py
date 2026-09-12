@@ -94,7 +94,7 @@ def serverless(monkeypatch, tmp_path):
     monkeypatch.delenv('SESSION_NAMESPACE', raising=False)
     backend = FakePostgREST()
     monkeypatch.setattr('session_store._request', backend)
-    monkeypatch.setattr('requests.request', Mock(side_effect=AssertionError('No live Supabase in tests')))
+    monkeypatch.setattr('requests.Session.request', Mock(side_effect=AssertionError('No live Supabase in tests')))
     helper = Mock()
     helper.login.return_value = {'access_token':'private-access-token', 'refresh_token':'private-refresh-token',
         'expires_in':3600, 'user':{'id':USER}}
