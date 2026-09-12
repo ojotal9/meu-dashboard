@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "flask",
+  "functions": {
+    "index.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{tests/**,instance/**,work/**,.venv/**,venv/**,*.sql,*.bat,README.md,VERCEL.md,requirements-dev.txt,.env*,.pytest_cache/**}"
+    }
+  },
+  "headers": [
+    {
+      "source": "/static/(.*)",
+      "headers": [{"key": "X-Content-Type-Options", "value": "nosniff"}]
+    }
+  ]
+}
