@@ -75,7 +75,7 @@
     }
   });
   // Refresh idle Supabase views so changes made by teammates become visible.
-  if (document.querySelector('.environment:not(.demo)')) {
+  if (document.body.dataset.liveUpdates === 'true') {
     let lastActivity = Date.now();
     ['input','keydown','pointerdown'].forEach(event => document.addEventListener(event, () => lastActivity = Date.now()));
     setInterval(() => { if (!document.hidden) fetch('/pulso', { credentials: 'same-origin' }).catch(() => {}); }, 45000);

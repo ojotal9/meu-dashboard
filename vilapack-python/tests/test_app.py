@@ -194,7 +194,8 @@ def test_production_requires_login_and_query_cannot_enable_demo(factory, path):
     assert not Path(application.config["DEMO_DB"]).exists()
     login = client.get("/login?demo=1")
     assert login.status_code == 200
-    assert "Supabase" in login.get_data(as_text=True)
+    assert "O acesso ainda precisa ser configurado" in login.get_data(as_text=True)
+    assert 'data-live-updates="false"' in login.get_data(as_text=True)
 
 
 def test_unconfigured_production_login_has_no_network_or_session(factory, monkeypatch):
@@ -241,7 +242,10 @@ def test_employee_page_and_delete_permissions_are_checked_on_server(factory, mon
     client = application.test_client()
     with client.session_transaction() as state:
         state.update(sid="qa-session", csrf="offline-csrf-token")
-    assert client.get("/painel/clientes").status_code == 200
+    page = client.get("/painel/clientes")
+    assert page.status_code == 200
+    assert 'data-live-updates="true"' in page.get_data(as_text=True)
+    assert '<span class="environment' not in page.get_data(as_text=True)
     assert client.get("/painel/transacoes").status_code == 403
     assert client.get("/painel/usuarios").status_code == 403
     assert client.get("/backup").status_code == 403
